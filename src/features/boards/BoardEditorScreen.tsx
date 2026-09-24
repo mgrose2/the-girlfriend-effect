@@ -6,6 +6,7 @@ import type { RouteProp } from '@react-navigation/native';
 import type { Pin } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
 import { Button, Chip, Screen, Text, colors, radius, spacing } from '../../ui';
+import { pickImageFromLibrary } from './pickImage';
 import { useBoard } from './useBoard';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'BoardEditor'>;
@@ -24,6 +25,22 @@ export function BoardEditorScreen() {
   const navigation = useNavigation<Nav>();
   const { boardId } = useRoute<Route>().params;
   const { board, loading, error, update } = useBoard(boardId);
+  const [picking, setPicking] = useState(false);
+
+  const addPin = useCallback(() => {
+    setPicking(true);
+    pickImageFromLibrary()
+      .then(result => {
+        if (result.status === 'picked') {
+          navigation.navigate('PinDetails', { boardId, imageUrl: result.uri });
+          return;
+        }
+        if (result.status === 'failed') {
+          Alert.alert('Could not add that photo', result.message);
+        }
+      })
+      .finally(() => setPicking(false));
+  }, [navigation, boardId]);
 
   useLayoutEffect(() => {
     if (board !== null) {
@@ -120,7 +137,8 @@ export function BoardEditorScreen() {
           testID="add-pin"
           label="Add a pin"
           disabled={full}
-          onPress={noop}
+          loading={picking}
+          onPress={addPin}
         />
       </View>
     </Screen>
@@ -154,9 +172,6 @@ function PinTile({ pin, onLongPress }: { pin: Pin; onLongPress: () => void }) {
     </Pressable>
   );
 }
-
-// Add-pin lands in 2.4 (camera roll) and 2.5 (by url).
-function noop() {}
 
 const styles = StyleSheet.create({
   loading: { marginTop: spacing.xl },

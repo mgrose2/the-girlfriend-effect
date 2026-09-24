@@ -12,6 +12,7 @@ module.exports = {
         'react-native-screens',
         'react-native-safe-area-context',
         '@react-native-async-storage',
+        'react-native-image-picker',
       ].join('|') +
       ')/)',
   ],

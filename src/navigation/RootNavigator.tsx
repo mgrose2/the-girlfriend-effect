@@ -4,6 +4,7 @@ import {
   BoardEditorScreen,
   BoardListScreen,
   CreateBoardScreen,
+  PinDetailsScreen,
 } from '../features/boards';
 import { RoleSelectScreen } from '../features/role';
 import { colors } from '../ui';
@@ -41,6 +42,11 @@ export function RootNavigator() {
           component={BoardEditorScreen}
           // Title is replaced with the board's own name once it loads.
           options={{ title: 'Board' }}
+        />
+        <Stack.Screen
+          name="PinDetails"
+          component={PinDetailsScreen}
+          options={{ title: 'Add a pin', presentation: 'modal' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

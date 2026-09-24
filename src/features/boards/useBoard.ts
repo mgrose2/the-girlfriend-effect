@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRepositories } from '../../data';
 import type { Board } from '../../domain';
 
@@ -19,30 +20,35 @@ export function useBoard(boardId: string): BoardState {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    repos.boards
-      .getById(boardId)
-      .then(found => {
-        if (!cancelled) {
-          setBoard(found);
-          setError(found === null ? 'That board no longer exists.' : null);
-        }
-      })
-      .catch((cause: unknown) => {
-        if (!cancelled) {
-          setError(String(cause));
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [repos, boardId]);
+  // On focus, not mount: the pin-details screen sits on top of the editor and
+  // writes to the same board, so the editor has to re-read on the way back or
+  // it renders a grid missing the pin just added.
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      repos.boards
+        .getById(boardId)
+        .then(found => {
+          if (!cancelled) {
+            setBoard(found);
+            setError(found === null ? 'That board no longer exists.' : null);
+          }
+        })
+        .catch((cause: unknown) => {
+          if (!cancelled) {
+            setError(String(cause));
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [repos, boardId]),
+  );
 
   const update = useCallback(
     async (change: (current: Board) => Board) => {
