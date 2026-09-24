@@ -10,7 +10,7 @@ Legend: ✅ done · 🟡 partly done (blocker noted) · ⬜ not started
 |---|---|
 | 0 — Foundation | ✅ all code landed, native build verified |
 | 1 — Domain + data layer + catalog | ✅ 34 tests green, round-trip verified on emulator |
-| 2 — Stylist flow: boards & pins | ⬜ |
+| 2 — Stylist flow: boards & pins | ✅ full stylist flow driven on emulator |
 | 3 — Firestore swap + sharing + intake | ⬜ |
 | 4 — Curated shop, cart, fake checkout | ⬜ |
 | 5 — Confirmation, polish, instrumentation | ⬜ |
@@ -145,18 +145,45 @@ Notes carried forward:
 
 ---
 
-## Sprint 2 — Stylist flow: boards & pins (Day 2–3) ⬜
+## Sprint 2 — Stylist flow: boards & pins (Day 2–3) ✅
 
-| # | Task | Commit |
-|---|---|---|
-| 2.1 | Board list screen — boards I've created, empty state, "New board" CTA | `feat(boards): add board list screen` |
-| 2.2 | Create-board flow — title + style tag picker (fixed tag vocabulary: old money, streetwear, athleisure, minimal, workwear, preppy) | `feat(boards): add board creation` |
-| 2.3 | Board editor — pin grid, delete pin, reorder deferred | `feat(boards): add board editor screen` |
-| 2.4 | Add-pin: image picker from camera roll + optional note/source URL (`react-native-image-picker`) | `feat(boards): add pin from camera roll` |
-| 2.5 | Add-pin by image URL — fallback path, and how you'll seed demo boards fast | `feat(boards): add pin by url` |
-| 2.6 | Per-pin tags, defaulting to the board's style tags | `feat(boards): add pin tagging` |
+Branch `sprint/2-boards`, stacked on `sprint/1-data`.
+
+| # | Task | Commit | Status |
+|---|---|---|---|
+| — | *Supporting:* `TextField` and `Chip` primitives | `feat(ui): add TextField and Chip primitives` | ✅ |
+| — | *Supporting:* name-only session, so the list knows whose boards to show | `feat(session): add session provider` | ✅ |
+| 2.1 | Board list screen — boards I've created, empty state, "New board" CTA | `feat(boards): add board list screen` | ✅ |
+| 2.2 | Create-board flow — title + style tag picker (fixed tag vocabulary: old money, streetwear, athleisure, minimal, workwear, preppy) | `feat(boards): add board creation` | ✅ at least one tag required |
+| 2.3 | Board editor — pin grid, delete pin, reorder deferred | `feat(boards): add board editor screen` | ✅ capped at 12 pins |
+| 2.4 | Add-pin: image picker from camera roll + optional note/source URL (`react-native-image-picker`) | `feat(boards): add pin from camera roll` | ✅ no runtime permission needed |
+| 2.5 | Add-pin by image URL — fallback path, and how you'll seed demo boards fast | `feat(boards): add pin by url` | ✅ shares the pin-details screen |
+| 2.6 | Per-pin tags, defaulting to the board's style tags | `feat(boards): add pin tagging` | ✅ **inert for matching — see below** |
+| — | *Fix:* images drawn, not empty boxes | `fix(boards): draw pin images instead of empty boxes` | ✅ |
+| — | *Fix:* one-pin card stretch, link-preview debounce | `fix(boards): stop one-pin cards stretching and debounce the link preview` | ✅ |
 
 **Done when:** you can build a real-looking 8-pin board end to end on device.
+→ Flow driven on an API 28 emulator: role select → board list empty state →
+create with tags → editor → camera-roll pin with note and tags → saved, grid
+and card thumbnails render, board survives navigation. Both add-pin sources
+verified, including a remote URL served from the host.
+
+Notes carried forward:
+
+- **Pin tags do not affect what the recipient sees.** `matchCatalog` filters
+  on `Board.styleTags` per plan §4; letting pin tags weight the shop would be
+  recommendation logic the plan rules out. Stylist-side organisation only —
+  decide in Sprint 4 whether that is the intent.
+- **The stylist has no real name yet**, defaulting to "You". 3.4 needs it,
+  since that is where the recipient sees who sent the board.
+- Three device-only bugs this sprint were invisible to lint, types and tests:
+  two image-layout faults and a preview that refetched per keystroke. The
+  image one failed *silently* — `onLoad` fired, `onError` did not, and every
+  picture was still blank. Worth remembering that RN image bugs do not
+  announce themselves.
+- Emulator has **no internet**, so remote images can only be checked by
+  serving them from the host over `adb reverse`. The catalog's `placehold.co`
+  URLs are therefore still unverified on device.
 
 > Images are stored as local file URIs in Sprint 2. Sprint 3 decides whether
 > they need uploading — see 3.6.
