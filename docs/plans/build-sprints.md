@@ -11,15 +11,19 @@ Legend: ✅ done · 🟡 partly done (blocker noted) · ⬜ not started
 | 0 — Foundation | ✅ all code landed, native build verified |
 | 1 — Domain + data layer + catalog | ✅ 34 tests green, round-trip verified on emulator |
 | 2 — Stylist flow: boards & pins | ✅ full stylist flow driven on emulator |
-| 3 — Firestore swap + sharing + intake | ⬜ |
+| 3 — Firestore swap + sharing + intake | 🟡 sharing and intake done; **all Firebase work blocked** |
 | 4 — Curated shop, cart, fake checkout | ⬜ |
 | 5 — Confirmation, polish, instrumentation | ⬜ |
 | 6 — Ship to testers | ⬜ |
 
 **Open blockers**
 
-1. **Firebase project not yet created** (task 0.7, console-only). Not urgent
-   until Sprint 3, but it gates that sprint entirely.
+1. **Firebase project not yet created** (task 0.7, console-only). This is now
+   live, not theoretical: it blocks 3.1, 3.2, 3.3 and 3.6, which is the whole
+   cross-device half of the product. Everything else in Sprint 3 is done.
+   Installing the native Firebase packages before `google-services.json`
+   exists would break the Android build for every other sprint, so they are
+   deliberately not installed yet.
 2. **Catalog imagery is placeholders.** Named grey boxes, not product photos.
    Fine for building against; has to be replaced before the test round, since
    a shop grid of grey boxes cannot tell us whether recipients buy. Due with
@@ -190,23 +194,46 @@ Notes carried forward:
 
 ---
 
-## Sprint 3 — Firestore swap + sharing + sizing intake (Day 3–4) ⬜
+## Sprint 3 — Firestore swap + sharing + sizing intake (Day 3–4) 🟡
 
 This is the **highest-risk sprint** — it's the only part that can't be faked,
 and the whole test card depends on it working across two phones. It's placed
 here, not last, so there's slack if native Firebase config fights back.
 
-| # | Task | Commit |
-|---|---|---|
-| 3.1 | Install `@react-native-firebase/app` + `/firestore`, Android native config, verify connection | `chore: add firebase dependencies and config` |
-| 3.2 | `data/firestore/` adapters implementing the same four ports | `feat(data): add firestore repository adapters` |
-| 3.3 | Flip `RepositoryProvider` to Firestore behind a `config` flag; keep local adapters for tests/offline dev | `feat(data): switch active adapters to firestore` |
-| 3.4 | Share sheet — generate a short human-typable code (e.g. `TGE-4F9K`), mark board `sentAt`, native share to text | `feat(share): add share sheet and code generation` |
-| 3.5 | Join screen — enter code, resolve board, claim as recipient | `feat(share): add join by code flow` |
-| 3.6 | Pin images: upload to Firebase Storage on share (local file URIs are invisible to the other phone) | `feat(share): upload pin images on send` |
-| 3.7 | Sizing intake form — shirt, pant waist/inseam, shoe, optional fit; persisted to the recipient's profile, shown once | `feat(intake): add sizing intake form` |
+Branch `sprint/3-sharing`, stacked on `sprint/2-boards`.
+
+| # | Task | Commit | Status |
+|---|---|---|---|
+| 3.1 | Install `@react-native-firebase/app` + `/firestore`, Android native config, verify connection | `chore: add firebase dependencies and config` | ⛔ **blocked** — needs the Firebase project |
+| 3.2 | `data/firestore/` adapters implementing the same four ports | `feat(data): add firestore repository adapters` | ⛔ **blocked** — writable but unverifiable, and needs 3.1's types |
+| 3.3 | Flip `RepositoryProvider` to Firestore behind a `config` flag; keep local adapters for tests/offline dev | `feat(data): switch active adapters to firestore` | ⛔ **blocked** — `flags.backend` already exists and throws for `firestore` |
+| — | *Supporting:* share code generation and parsing | `feat(domain): add share code generation and parsing` | ✅ 16 tests, mutation-checked |
+| 3.4 | Share sheet — generate a short human-typable code (e.g. `TGE-4F9K`), mark board `sentAt`, native share to text | `feat(share): add share sheet and code generation` | ✅ |
+| 3.5 | Join screen — enter code, resolve board, claim as recipient | `feat(share): add join by code flow` | ✅ |
+| 3.6 | Pin images: upload to Firebase Storage on share (local file URIs are invisible to the other phone) | `feat(share): upload pin images on send` | ⛔ **blocked** — needs Firebase Storage |
+| 3.7 | Sizing intake form — shirt, pant waist/inseam, shoe, optional fit; persisted to the recipient's profile, shown once | `feat(intake): add sizing intake form` | ✅ landed inside the 3.5 commit, not its own |
+| — | *Fix:* role switch no longer orphans boards | `fix(session): reuse the existing identity when switching roles` | ✅ |
 
 **Done when:** a board created on phone A is visible, with images, on phone B after entering the code.
+→ **Not met, and cannot be until Firebase exists.** What is verified is the
+whole flow on one device: create → send → code `TGE-WDQK` → back out → enter
+the code lowercase and unhyphenated → claimed → intake → board. Rejoining
+skips intake, and switching back to stylist shows the board marked *sent*.
+
+Notes carried forward:
+
+- **3.7 was committed inside 3.5** rather than separately — the intake screen
+  is only reachable from join, and the two were written together. Worth
+  knowing when reviewing task-by-task.
+- Share codes are assigned once and reused. Regenerating per visit would
+  invalidate a code already sitting in somebody's text messages.
+- A claimed board cannot be re-claimed by a different person, so two people
+  entering the same code cannot swap ownership of the order that follows.
+- The stylist is still named "You". 3.4 was supposed to be where a real name
+  mattered; the share message currently says who made it only implicitly.
+  Worth fixing before the test round.
+- One device can now hold both roles without losing data. Two phones never hit
+  that path, but every QA pass and demo does.
 
 > If 3.1/3.6 turn into a native-config rabbit hole, the fallback is the
 > Firebase JS SDK (`firebase` npm, `experimentalForceLongPolling: true`) —
