@@ -1,6 +1,10 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { BoardListScreen, CreateBoardScreen } from '../features/boards';
+import {
+  BoardEditorScreen,
+  BoardListScreen,
+  CreateBoardScreen,
+} from '../features/boards';
 import { RoleSelectScreen } from '../features/role';
 import { colors } from '../ui';
 import type { RootStackParamList } from './types';
@@ -31,6 +35,12 @@ export function RootNavigator() {
           name="CreateBoard"
           component={CreateBoardScreen}
           options={{ title: 'New board' }}
+        />
+        <Stack.Screen
+          name="BoardEditor"
+          component={BoardEditorScreen}
+          // Title is replaced with the board's own name once it loads.
+          options={{ title: 'Board' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
