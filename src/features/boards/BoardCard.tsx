@@ -22,7 +22,11 @@ export function BoardCard({ board, onPress }: { board: Board; onPress: () => voi
       {preview.length > 0 ? (
         <View style={styles.preview}>
           {preview.map(pin => (
-            <Image key={pin.id} source={{ uri: pin.imageUrl }} style={styles.thumb} />
+            // Sizing on the wrapper, not the Image: aspectRatio applied
+            // straight to an Image lays out the box without drawing anything.
+            <View key={pin.id} style={styles.thumb}>
+              <Image source={{ uri: pin.imageUrl }} style={styles.thumbImage} />
+            </View>
           ))}
           {overflow > 0 ? (
             <View style={[styles.thumb, styles.overflow]}>
@@ -64,7 +68,9 @@ const styles = StyleSheet.create({
     aspectRatio: 3 / 4,
     borderRadius: radius.sm,
     backgroundColor: colors.surfaceMuted,
+    overflow: 'hidden',
   },
+  thumbImage: { width: '100%', height: '100%' },
   overflow: {
     alignItems: 'center',
     justifyContent: 'center',

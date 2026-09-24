@@ -111,22 +111,28 @@ export function PinDetailsScreen() {
       )}
 
       <View style={styles.previewWrap}>
-        {trimmedImage.length === 0 || loadFailed ? (
-          <View style={[styles.preview, styles.previewFallback]}>
-            <Text variant="caption" tone="muted" center>
-              {trimmedImage.length === 0
-                ? 'Preview appears here'
-                : 'That link did not load an image.'}
-            </Text>
-          </View>
-        ) : (
-          <Image
-            source={{ uri: trimmedImage }}
-            style={styles.preview}
-            resizeMode="cover"
-            onError={() => setLoadFailed(true)}
-          />
-        )}
+        {/* The sizing lives on this wrapper, never on the Image. A percentage
+            width plus aspectRatio applied straight to an Image lays the box out
+            but never draws the bitmap, which reads as a silently broken
+            picture — onLoad still fires, so nothing looks wrong in logs. */}
+        <View style={styles.preview}>
+          {trimmedImage.length === 0 || loadFailed ? (
+            <View style={styles.previewFallback}>
+              <Text variant="caption" tone="muted" center>
+                {trimmedImage.length === 0
+                  ? 'Preview appears here'
+                  : 'That link did not load an image.'}
+              </Text>
+            </View>
+          ) : (
+            <Image
+              source={{ uri: trimmedImage }}
+              style={styles.previewImage}
+              resizeMode="cover"
+              onError={() => setLoadFailed(true)}
+            />
+          )}
+        </View>
       </View>
 
       <TextField
@@ -202,8 +208,11 @@ const styles = StyleSheet.create({
     aspectRatio: 3 / 4,
     borderRadius: radius.md,
     backgroundColor: colors.surfaceMuted,
+    overflow: 'hidden',
   },
+  previewImage: { width: '100%', height: '100%' },
   previewFallback: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.md,
