@@ -4,6 +4,9 @@
  */
 export type RootStackParamList = {
   RoleSelect: undefined;
+  BoardList: undefined;
+  CreateBoard: undefined;
+  BoardEditor: { boardId: string };
 };
 
 declare global {

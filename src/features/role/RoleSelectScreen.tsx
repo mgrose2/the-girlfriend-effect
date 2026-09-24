@@ -1,18 +1,34 @@
+import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { flags } from '../../config';
-import { DevToolsPanel } from '../dev';
+import type { RootStackParamList } from '../../navigation';
 import { Button, Screen, Text, spacing } from '../../ui';
+import { DevToolsPanel } from '../dev';
+import { useSession } from '../session';
+
+type Nav = NativeStackNavigationProp<RootStackParamList, 'RoleSelect'>;
 
 /**
  * The fork at the top of both flows: am I curating a board, or did someone
  * send me one?
  *
- * The two destinations do not exist yet — the stylist path lands in Sprint 2
- * (board list) and the recipient path in Sprint 3 (join by code). Until then
- * this screen exists to prove the navigator and the UI primitives render on
- * device.
+ * The recipient path lands in Sprint 3 (join by code) and is inert until then.
  */
 export function RoleSelectScreen() {
+  const navigation = useNavigation<Nav>();
+  const { enterAs } = useSession();
+  const [busy, setBusy] = useState(false);
+
+  const onStylist = useCallback(() => {
+    setBusy(true);
+    enterAs('stylist')
+      .then(() => navigation.navigate('BoardList'))
+      .catch(() => setBusy(false))
+      .finally(() => setBusy(false));
+  }, [enterAs, navigation]);
+
   return (
     <Screen>
       <View style={styles.header}>
@@ -27,7 +43,8 @@ export function RoleSelectScreen() {
         <Button
           testID="role-stylist"
           label="I'm making a board"
-          onPress={noop}
+          disabled={busy}
+          onPress={onStylist}
         />
         <Button
           testID="role-recipient"
@@ -40,7 +57,7 @@ export function RoleSelectScreen() {
   );
 }
 
-// Placeholder until the board list (2.1) and join-by-code (3.5) screens exist.
+// Placeholder until join-by-code (3.5) exists.
 function noop() {}
 
 const styles = StyleSheet.create({

@@ -67,6 +67,9 @@ yarn-error.log
 # testing
 /coverage
 
+# Scratch space for emulator screenshots and pulled device data during QA
+.tmp-qa/
+
 # Claude Code — personal machine settings, not team-wide
 .claude/settings.local.json
 
