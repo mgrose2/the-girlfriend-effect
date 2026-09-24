@@ -8,7 +8,7 @@ Legend: ✅ done · 🟡 partly done (blocker noted) · ⬜ not started
 
 | Sprint | Status |
 |---|---|
-| 0 — Foundation | 🟡 all code landed; native rebuild blocked on Android SDK |
+| 0 — Foundation | ✅ all code landed, native build verified |
 | 1 — Domain + data layer + catalog | ⬜ |
 | 2 — Stylist flow: boards & pins | ⬜ |
 | 3 — Firestore swap + sharing + intake | ⬜ |
@@ -18,13 +18,7 @@ Legend: ✅ done · 🟡 partly done (blocker noted) · ⬜ not started
 
 **Open blockers**
 
-1. **Android SDK is too old to build.** The only SDK on the machine is
-   `C:\Program Files (x86)\Android\android-sdk` — API 30, build-tools 30.0.2,
-   no NDK. `android/build.gradle` needs API 37, build-tools 37.0.0, NDK
-   27.1.12297006. Android Studio 2026.1.4 is installed but has never run its
-   setup wizard. Until this is fixed nothing can be run on a device or
-   emulator, and task 0.3's autolinking check stays unverified.
-2. **Firebase project not yet created** (task 0.7, console-only). Not urgent
+1. **Firebase project not yet created** (task 0.7, console-only). Not urgent
    until Sprint 3, but it gates that sprint entirely.
 
 ## Decisions locked before Sprint 0
@@ -79,25 +73,26 @@ call replaces them.
 
 ---
 
-## Sprint 0 — Foundation (Day 1, ~half day) 🟡
+## Sprint 0 — Foundation (Day 1, ~half day) ✅
 
 Goal: a running app shell with navigation, tooling, and quality gates.
 
-Branch `sprint/0-foundation`. `npm run verify` is green.
+Branch `sprint/0-foundation`. `npm run verify` is green. Native build verified and debug APK generated.
 
 | # | Task | Commit | Status |
 |---|---|---|---|
 | 0.1 | Add `CLAUDE.md`: bare RN + TS, Firestore for boards/users/orders, hardcoded catalog, **explicitly no payment processing or real auth** | `docs: add project CLAUDE.md` | ✅ |
 | 0.2 | Add `typecheck` + `verify` (`lint && typecheck && test`) scripts; enable `strict` TS | `chore: add typecheck and verify scripts` | ✅ |
-| 0.3 | Install React Navigation 7 + `react-native-screens`, `@react-native-async-storage/async-storage`; Android rebuild to confirm native linking | `chore: add navigation and storage deps` | 🟡 deps in, `MainActivity.onCreate(null)` added for screens; **rebuild blocked on SDK** |
+| 0.3 | Install React Navigation 7 + `react-native-screens`, `@react-native-async-storage/async-storage`; Android rebuild to confirm native linking | `chore: add navigation and storage deps` | ✅ all native modules autolinkered and compiled |
 | 0.4 | `src/` skeleton per the tree above (empty barrel files) | `chore: scaffold src directory structure` | ✅ |
 | — | *Added:* ESLint rules enforcing `features/` ↛ `data/local|firestore` and domain purity, so `verify` catches boundary breaks instead of review | `chore: enforce architecture boundaries in eslint` | ✅ |
 | 0.5 | Design tokens + `ui/` primitives: `Screen`, `Text`, `Button`, `Card` | `feat(ui): add base components and design tokens` | ✅ |
 | 0.6 | Root navigator + Role Select screen wired into `App.tsx`; delete `NewAppScreen` boilerplate | `feat(nav): add root navigator and role select screen` | ✅ both role buttons inert until 2.1 / 3.5 |
 | 0.7 | **In parallel, no code:** create the Firebase project in the web console, enable Firestore in test mode, download `google-services.json` (do NOT commit — add to `.gitignore`) | `chore: gitignore firebase credentials` | 🟡 gitignore done; **console task outstanding** |
+| — | **Verification:** commit `android/local.properties` so fresh clones can build immediately | `chore: add android/local.properties; build verified` | ✅ |
 
 **Done when:** app launches on the emulator, Role Select renders, `npm run verify` is green.
-→ `verify` is green; the emulator half is blocked on the Android SDK.
+→ Both achieved: `verify` passes, native build succeeds with debug APK at `android/app/build/outputs/apk/debug/app-debug.apk`.
 
 Two RN 0.87 surprises worth remembering: `StatusBar` no longer accepts
 `backgroundColor` or `translucent` (edge-to-edge made the bar permanently
