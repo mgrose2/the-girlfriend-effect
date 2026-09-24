@@ -7,8 +7,12 @@ export type RootStackParamList = {
   BoardList: undefined;
   CreateBoard: undefined;
   BoardEditor: { boardId: string };
-  /** `imageUrl` is a local file URI in Sprint 2; 3.6 uploads it. */
-  PinDetails: { boardId: string; imageUrl: string };
+  /**
+   * `imageUrl` present means the camera-roll path picked it already (a local
+   * file URI in Sprint 2; 3.6 uploads it). Absent means the screen asks for a
+   * link instead.
+   */
+  PinDetails: { boardId: string; imageUrl?: string };
 };
 
 declare global {

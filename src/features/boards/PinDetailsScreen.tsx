@@ -13,22 +13,33 @@ type Nav = NativeStackNavigationProp<RootStackParamList, 'PinDetails'>;
 type Route = RouteProp<RootStackParamList, 'PinDetails'>;
 
 /**
- * Note and source for a pin that has already been chosen. Both optional — the
- * picture is the point, and making the stylist write a caption for every pin
- * is friction on the one person we need to stay enthusiastic.
+ * Details for a pin from either source. When the camera-roll path (2.4) sends
+ * an `imageUrl` the picture is fixed and just previewed; when the URL path
+ * (2.5) sends none, the same screen grows a link field and previews as you
+ * type.
+ *
+ * One screen rather than two: the note, source and (from 2.6) tags are
+ * identical either way, and a second copy would drift.
  */
 export function PinDetailsScreen() {
   const navigation = useNavigation<Nav>();
-  const { boardId, imageUrl } = useRoute<Route>().params;
-  const { board, update } = useBoard(boardId);
+  const params = useRoute<Route>().params;
+  const { board, update } = useBoard(params.boardId);
 
+  const fromLibrary = params.imageUrl !== undefined;
+  const [imageUrl, setImageUrl] = useState(params.imageUrl ?? '');
   const [note, setNote] = useState('');
   const [sourceUrl, setSourceUrl] = useState('');
+  const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  const trimmedImage = imageUrl.trim();
+  const imageError = validateImageUrl(trimmedImage);
 
   const onSave = useCallback(() => {
-    if (board === null) {
+    setSubmitted(true);
+    if (board === null || imageError !== undefined) {
       return;
     }
     setSaving(true);
@@ -37,7 +48,7 @@ export function PinDetailsScreen() {
     const trimmedSource = sourceUrl.trim();
     const pin: Pin = {
       id: newId('pin'),
-      imageUrl,
+      imageUrl: trimmedImage,
       // Omitted rather than stored empty, so `note === undefined` stays the
       // single way to ask "is there a note".
       ...(trimmedNote.length > 0 ? { note: trimmedNote } : {}),
@@ -48,23 +59,44 @@ export function PinDetailsScreen() {
     update(current => ({ ...current, pins: [...current.pins, pin] }))
       .then(() => navigation.goBack())
       .catch(() => setSaving(false));
-  }, [board, note, sourceUrl, imageUrl, update, navigation]);
+  }, [board, imageError, note, sourceUrl, trimmedImage, update, navigation]);
 
   return (
     <Screen scroll>
+      {fromLibrary ? null : (
+        <TextField
+          label="Image link"
+          placeholder="https://…"
+          value={imageUrl}
+          onChangeText={value => {
+            setImageUrl(value);
+            setLoadFailed(false);
+          }}
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoFocus
+          keyboardType="url"
+          hint="Paste the address of a picture — long-press an image in a browser to copy it."
+          error={submitted ? imageError : undefined}
+          containerStyle={styles.field}
+        />
+      )}
+
       <View style={styles.previewWrap}>
-        {failed ? (
+        {trimmedImage.length === 0 || loadFailed ? (
           <View style={[styles.preview, styles.previewFallback]}>
             <Text variant="caption" tone="muted" center>
-              That image could not be loaded.
+              {trimmedImage.length === 0
+                ? 'Preview appears here'
+                : 'That link did not load an image.'}
             </Text>
           </View>
         ) : (
           <Image
-            source={{ uri: imageUrl }}
+            source={{ uri: trimmedImage }}
             style={styles.preview}
             resizeMode="cover"
-            onError={() => setFailed(true)}
+            onError={() => setLoadFailed(true)}
           />
         )}
       </View>
@@ -103,6 +135,20 @@ export function PinDetailsScreen() {
   );
 }
 
+/**
+ * Shape check only. Whether the link actually resolves to an image is
+ * something the preview answers far better than a regex can.
+ */
+function validateImageUrl(value: string): string | undefined {
+  if (value.length === 0) {
+    return 'Paste a link to a picture.';
+  }
+  if (!/^(https?|file|content):\/\//i.test(value)) {
+    return 'That needs to start with http:// or https://';
+  }
+  return undefined;
+}
+
 const styles = StyleSheet.create({
   previewWrap: { alignItems: 'center', marginTop: spacing.md },
   preview: {
@@ -111,7 +157,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: colors.surfaceMuted,
   },
-  previewFallback: { alignItems: 'center', justifyContent: 'center' },
+  previewFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.md,
+  },
   field: { marginTop: spacing.lg },
   footer: { marginTop: spacing.xl },
 });

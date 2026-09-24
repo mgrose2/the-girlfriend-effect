@@ -27,7 +27,7 @@ export function BoardEditorScreen() {
   const { board, loading, error, update } = useBoard(boardId);
   const [picking, setPicking] = useState(false);
 
-  const addPin = useCallback(() => {
+  const addFromLibrary = useCallback(() => {
     setPicking(true);
     pickImageFromLibrary()
       .then(result => {
@@ -41,6 +41,17 @@ export function BoardEditorScreen() {
       })
       .finally(() => setPicking(false));
   }, [navigation, boardId]);
+
+  const addPin = useCallback(() => {
+    Alert.alert('Add a pin', 'Where is the picture coming from?', [
+      { text: 'Photo library', onPress: addFromLibrary },
+      {
+        text: 'Paste a link',
+        onPress: () => navigation.navigate('PinDetails', { boardId }),
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }, [addFromLibrary, navigation, boardId]);
 
   useLayoutEffect(() => {
     if (board !== null) {
