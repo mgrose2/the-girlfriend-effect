@@ -1,0 +1,5 @@
+{
+  "enabledPlugins": {
+    "dev-agents@mark-claude-kit": true
+  }
+}

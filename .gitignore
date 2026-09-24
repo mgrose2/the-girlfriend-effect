@@ -66,6 +66,9 @@ yarn-error.log
 # testing
 /coverage
 
+# Claude Code — personal machine settings, not team-wide
+.claude/settings.local.json
+
 # Yarn
 .yarn/*
 !.yarn/patches
