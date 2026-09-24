@@ -1,4 +1,4 @@
-import type { User } from '../../domain';
+import type { Role, User } from '../../domain';
 import type { UserRepository } from '../ports';
 import { KEYS, readCollection, readValue, writeCollection, writeValue } from './storage';
 
@@ -6,6 +6,11 @@ export class LocalUserRepository implements UserRepository {
   async getById(id: string): Promise<User | null> {
     const users = await readCollection<User>(KEYS.users);
     return users[id] ?? null;
+  }
+
+  async findByRole(role: Role): Promise<User | null> {
+    const users = await readCollection<User>(KEYS.users);
+    return Object.values(users).find(user => user.role === role) ?? null;
   }
 
   async save(user: User): Promise<User> {

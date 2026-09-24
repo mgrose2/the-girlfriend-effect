@@ -6,10 +6,18 @@
  * Firestore call must not change the shape of a single call site.
  */
 
-import type { Board, CatalogItem, Order, User } from '../domain';
+import type { Board, CatalogItem, Order, Role, User } from '../domain';
 
 export interface UserRepository {
   getById(id: string): Promise<User | null>;
+  /**
+   * An existing identity for this role on this device, if there is one.
+   *
+   * Exists because one phone can play both parts — during QA, a demo, or a
+   * couple sharing a handset. Without it, switching roles and back would mint
+   * a fresh stylist each time and orphan the boards the previous one owned.
+   */
+  findByRole(role: Role): Promise<User | null>;
   /** Insert or replace, keyed on `user.id`. Returns the stored record. */
   save(user: User): Promise<User>;
   /**

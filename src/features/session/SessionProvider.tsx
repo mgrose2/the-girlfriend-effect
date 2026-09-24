@@ -77,6 +77,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         return current;
       }
 
+      // The current user holds the other role. One phone can play both parts
+      // during QA or a demo, so look for an existing identity for this role
+      // before creating one — otherwise switching back and forth mints a new
+      // stylist each time and orphans the boards the last one owned.
+      const existing = await repos.users.findByRole(role);
+      if (existing !== null) {
+        await repos.users.setCurrent(existing.id);
+        setUser(existing);
+        return existing;
+      }
+
       const created: User = {
         id: newId('user'),
         name: name ?? DEFAULT_NAMES[role],
