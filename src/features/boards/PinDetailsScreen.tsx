@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -56,6 +56,23 @@ export function PinDetailsScreen() {
   const trimmedImage = imageUrl.trim();
   const imageError = validateImageUrl(trimmedImage);
 
+  /**
+   * Preview URL, settled after typing stops.
+   *
+   * Without this the preview fetches on every keystroke, so typing a link out
+   * by hand fires a request per character and leaves the error showing against
+   * a half-finished address — the picture looks broken when it is fine.
+   * Pasting, which is the normal case, arrives in one change and is unaffected.
+   */
+  const [previewUrl, setPreviewUrl] = useState(trimmedImage);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPreviewUrl(trimmedImage);
+      setLoadFailed(false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [trimmedImage]);
+
   const onSave = useCallback(() => {
     setSubmitted(true);
     if (board === null || imageError !== undefined) {
@@ -96,10 +113,7 @@ export function PinDetailsScreen() {
           label="Image link"
           placeholder="https://…"
           value={imageUrl}
-          onChangeText={value => {
-            setImageUrl(value);
-            setLoadFailed(false);
-          }}
+          onChangeText={setImageUrl}
           autoCapitalize="none"
           autoCorrect={false}
           autoFocus
@@ -116,17 +130,17 @@ export function PinDetailsScreen() {
             but never draws the bitmap, which reads as a silently broken
             picture — onLoad still fires, so nothing looks wrong in logs. */}
         <View style={styles.preview}>
-          {trimmedImage.length === 0 || loadFailed ? (
+          {previewUrl.length === 0 || loadFailed ? (
             <View style={styles.previewFallback}>
               <Text variant="caption" tone="muted" center>
-                {trimmedImage.length === 0
+                {previewUrl.length === 0
                   ? 'Preview appears here'
                   : 'That link did not load an image.'}
               </Text>
             </View>
           ) : (
             <Image
-              source={{ uri: trimmedImage }}
+              source={{ uri: previewUrl }}
               style={styles.previewImage}
               resizeMode="cover"
               onError={() => setLoadFailed(true)}

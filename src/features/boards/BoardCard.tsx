@@ -6,8 +6,14 @@ import { Card, Chip, Text, colors, radius, spacing } from '../../ui';
 const PREVIEW_COUNT = 4;
 
 export function BoardCard({ board, onPress }: { board: Board; onPress: () => void }) {
-  const preview = board.pins.slice(0, PREVIEW_COUNT);
-  const overflow = board.pins.length - preview.length;
+  const overflow = Math.max(0, board.pins.length - PREVIEW_COUNT);
+  // When there is overflow, the last slot becomes the "+N" tile.
+  const preview = board.pins.slice(0, overflow > 0 ? PREVIEW_COUNT - 1 : PREVIEW_COUNT);
+  const filled = preview.length + (overflow > 0 ? 1 : 0);
+  const padding = Array.from(
+    { length: PREVIEW_COUNT - filled },
+    (_, index) => `spacer-${index}`,
+  );
 
   return (
     <Card onPress={onPress} testID={`board-${board.id}`} style={styles.card}>
@@ -35,6 +41,13 @@ export function BoardCard({ board, onPress }: { board: Board; onPress: () => voi
               </Text>
             </View>
           ) : null}
+          {/* Empty slots keep every thumbnail the same size. Without them a
+              one-pin board stretches its single flex:1 thumb across the whole
+              row, and the 3:4 ratio then makes the card taller than the
+              screen. */}
+          {padding.map(key => (
+            <View key={key} style={styles.thumbSpacer} />
+          ))}
         </View>
       ) : null}
 
@@ -71,6 +84,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   thumbImage: { width: '100%', height: '100%' },
+  thumbSpacer: { flex: 1 },
   overflow: {
     alignItems: 'center',
     justifyContent: 'center',
