@@ -147,10 +147,19 @@ export function BoardEditorScreen() {
         <Button
           testID="add-pin"
           label="Add a pin"
+          variant={board.pins.length > 0 ? 'secondary' : 'primary'}
           disabled={full}
           loading={picking}
           onPress={addPin}
         />
+        {board.pins.length > 0 ? (
+          <Button
+            testID="send-board"
+            label={board.sentAt === undefined ? 'Send it' : 'Send again'}
+            style={styles.sendButton}
+            onPress={() => navigation.navigate('ShareBoard', { boardId })}
+          />
+        ) : null}
       </View>
     </Screen>
   );
@@ -221,4 +230,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   fullNote: { marginBottom: spacing.sm },
+  sendButton: { marginTop: spacing.sm },
 });

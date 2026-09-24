@@ -13,6 +13,7 @@ export type RootStackParamList = {
    * link instead.
    */
   PinDetails: { boardId: string; imageUrl?: string };
+  ShareBoard: { boardId: string };
 };
 
 declare global {

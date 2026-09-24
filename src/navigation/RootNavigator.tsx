@@ -7,6 +7,7 @@ import {
   PinDetailsScreen,
 } from '../features/boards';
 import { RoleSelectScreen } from '../features/role';
+import { ShareBoardScreen } from '../features/share';
 import { colors } from '../ui';
 import type { RootStackParamList } from './types';
 
@@ -47,6 +48,11 @@ export function RootNavigator() {
           name="PinDetails"
           component={PinDetailsScreen}
           options={{ title: 'Add a pin', presentation: 'modal' }}
+        />
+        <Stack.Screen
+          name="ShareBoard"
+          component={ShareBoardScreen}
+          options={{ title: 'Send board' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
