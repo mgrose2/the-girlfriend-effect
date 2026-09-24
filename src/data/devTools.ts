@@ -14,9 +14,32 @@ import type { Repositories } from './ports';
 /**
  * Wipes every key this app owns. The catalog needs no reload — it is seed
  * data served straight from the bundle, never persisted.
+ *
+ * Pass the ids of records you expect to be gone and they are read back through
+ * the repositories afterwards. Jest cannot cover this — AsyncStorage is native
+ * — so the check has to happen on device or not at all.
  */
-export async function resetAllData(): Promise<void> {
+export async function resetAllData(
+  repos?: Repositories,
+  expectGone?: { boardId?: string; userId?: string },
+): Promise<void> {
   await clearLocalStorage();
+
+  if (repos === undefined || expectGone === undefined) {
+    return;
+  }
+  if (expectGone.boardId !== undefined) {
+    const board = await repos.boards.getById(expectGone.boardId);
+    if (board !== null) {
+      throw new Error(`Reset left board ${expectGone.boardId} behind`);
+    }
+  }
+  if (expectGone.userId !== undefined) {
+    const user = await repos.users.getById(expectGone.userId);
+    if (user !== null) {
+      throw new Error(`Reset left user ${expectGone.userId} behind`);
+    }
+  }
 }
 
 export type SeedResult = {

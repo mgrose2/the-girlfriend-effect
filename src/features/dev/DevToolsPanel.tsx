@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { resetAllData, seedSampleBoard, useRepositories } from '../../data';
+import type { SeedResult } from '../../data';
 import { Button, Card, Text, spacing } from '../../ui';
 
 /**
@@ -16,6 +17,9 @@ export function DevToolsPanel() {
   const repos = useRepositories();
   const [status, setStatus] = useState('Idle');
   const [busy, setBusy] = useState(false);
+  // Remembered so Reset can prove the records really went, rather than just
+  // reporting that the clear call did not throw.
+  const [lastSeed, setLastSeed] = useState<SeedResult | null>(null);
 
   // Returns void rather than a promise: these are button handlers, and an
   // unawaited promise here is the point, not an oversight.
@@ -30,18 +34,28 @@ export function DevToolsPanel() {
 
   const onSeed = useCallback(() => {
     run('Seeding', async () => {
-      const { stylist, board } = await seedSampleBoard(repos);
-      const owned = await repos.boards.listByOwner(stylist.id);
-      return `Wrote and read back ${board.title} · ${owned.length} board(s) for this stylist`;
+      const result = await seedSampleBoard(repos);
+      setLastSeed(result);
+      const owned = await repos.boards.listByOwner(result.stylist.id);
+      return `Wrote and read back ${result.board.title} · ${owned.length} board(s) for this stylist`;
     });
   }, [repos, run]);
 
   const onReset = useCallback(() => {
     run('Resetting', async () => {
-      await resetAllData();
-      return 'Storage cleared';
+      const expected = lastSeed;
+      await resetAllData(
+        repos,
+        expected === null
+          ? undefined
+          : { boardId: expected.board.id, userId: expected.stylist.id },
+      );
+      setLastSeed(null);
+      return expected === null
+        ? 'Storage cleared'
+        : 'Storage cleared · seeded board and user confirmed gone';
     });
-  }, [run]);
+  }, [lastSeed, repos, run]);
 
   return (
     <Card style={styles.card}>
