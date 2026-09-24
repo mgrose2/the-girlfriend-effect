@@ -1,12 +1,12 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { newId } from '../../domain';
-import type { Pin } from '../../domain';
+import { newId, STYLE_TAGS } from '../../domain';
+import type { Pin, StyleTag } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
-import { Button, Screen, Text, TextField, colors, radius, spacing } from '../../ui';
+import { Button, Chip, Screen, Text, TextField, colors, radius, spacing } from '../../ui';
 import { useBoard } from './useBoard';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'PinDetails'>;
@@ -34,6 +34,25 @@ export function PinDetailsScreen() {
   const [saving, setSaving] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
 
+  // Tags default to the board's, so the common case — this pin is more of what
+  // the board is already about — needs no taps at all. null means "not touched
+  // yet", which is how the default survives the board loading asynchronously.
+  const [tags, setTags] = useState<StyleTag[] | null>(null);
+  const effectiveTags = useMemo(
+    () => tags ?? board?.styleTags ?? [],
+    [tags, board],
+  );
+
+  const toggleTag = useCallback(
+    (tag: StyleTag) => {
+      setTags(current => {
+        const base = current ?? board?.styleTags ?? [];
+        return base.includes(tag) ? base.filter(t => t !== tag) : [...base, tag];
+      });
+    },
+    [board],
+  );
+
   const trimmedImage = imageUrl.trim();
   const imageError = validateImageUrl(trimmedImage);
 
@@ -53,13 +72,22 @@ export function PinDetailsScreen() {
       // single way to ask "is there a note".
       ...(trimmedNote.length > 0 ? { note: trimmedNote } : {}),
       ...(trimmedSource.length > 0 ? { sourceUrl: trimmedSource } : {}),
-      tags: [],
+      tags: effectiveTags,
     };
 
     update(current => ({ ...current, pins: [...current.pins, pin] }))
       .then(() => navigation.goBack())
       .catch(() => setSaving(false));
-  }, [board, imageError, note, sourceUrl, trimmedImage, update, navigation]);
+  }, [
+    board,
+    imageError,
+    note,
+    sourceUrl,
+    trimmedImage,
+    effectiveTags,
+    update,
+    navigation,
+  ]);
 
   return (
     <Screen scroll>
@@ -122,6 +150,24 @@ export function PinDetailsScreen() {
         containerStyle={styles.field}
       />
 
+      <Text variant="label" tone="muted" style={styles.sectionLabel}>
+        Style
+      </Text>
+      <Text variant="caption" tone="muted">
+        Starts from the board's styles. Narrow it if this pin is its own thing.
+      </Text>
+      <View style={styles.tags}>
+        {STYLE_TAGS.map(tag => (
+          <Chip
+            key={tag}
+            testID={`pin-tag-${tag}`}
+            label={tag}
+            selected={effectiveTags.includes(tag)}
+            onPress={() => toggleTag(tag)}
+          />
+        ))}
+      </View>
+
       <View style={styles.footer}>
         <Button
           testID="save-pin"
@@ -163,5 +209,12 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   field: { marginTop: spacing.lg },
+  sectionLabel: { marginTop: spacing.lg },
+  tags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
   footer: { marginTop: spacing.xl },
 });
