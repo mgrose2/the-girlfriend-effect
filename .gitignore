@@ -69,6 +69,13 @@ yarn-error.log
 # Claude Code — personal machine settings, not team-wide
 .claude/settings.local.json
 
+# Firebase credentials — per-developer, never committed
+google-services.json
+GoogleService-Info.plist
+**/google-services.json
+**/GoogleService-Info.plist
+.firebaserc
+
 # Yarn
 .yarn/*
 !.yarn/patches
