@@ -9,7 +9,7 @@ Legend: ✅ done · 🟡 partly done (blocker noted) · ⬜ not started
 | Sprint | Status |
 |---|---|
 | 0 — Foundation | ✅ all code landed, native build verified |
-| 1 — Domain + data layer + catalog | ⬜ |
+| 1 — Domain + data layer + catalog | ✅ 34 tests green, round-trip verified on emulator |
 | 2 — Stylist flow: boards & pins | ⬜ |
 | 3 — Firestore swap + sharing + intake | ⬜ |
 | 4 — Curated shop, cart, fake checkout | ⬜ |
@@ -20,6 +20,10 @@ Legend: ✅ done · 🟡 partly done (blocker noted) · ⬜ not started
 
 1. **Firebase project not yet created** (task 0.7, console-only). Not urgent
    until Sprint 3, but it gates that sprint entirely.
+2. **Catalog imagery is placeholders.** Named grey boxes, not product photos.
+   Fine for building against; has to be replaced before the test round, since
+   a shop grid of grey boxes cannot tell us whether recipients buy. Due with
+   4.1 at the latest.
 
 ## Decisions locked before Sprint 0
 
@@ -101,22 +105,43 @@ Navigation and `react-native-screens` ship untranspiled ESM.
 
 ---
 
-## Sprint 1 — Domain + data layer + catalog (Day 1–2) ⬜
+## Sprint 1 — Domain + data layer + catalog (Day 1–2) ✅
 
 Goal: every piece of business logic exists and is tested, with zero UI dependency.
 
-| # | Task | Commit |
-|---|---|---|
-| 1.1 | `domain/types.ts` — `User`, `SizingProfile`, `Pin`, `Board`, `CatalogItem`, `Order` verbatim from plan §4 | `feat(domain): add core data model types` |
-| 1.2 | `data/ports.ts` — the four repository interfaces, all methods async | `feat(data): define repository interfaces` |
-| 1.3 | Seed catalog: ~40 items across the 7 retailers, tagged + sized, with image URLs | `feat(catalog): add hardcoded catalog seed data` |
-| 1.4 | `domain/matching.ts` — tag overlap **and** category-correct size match (`top`→shirtSize, `bottom`→pant waist/inseam, `shoes`→shoeSize, `outerwear`→shirtSize, `accessory`→no size filter) | `feat(domain): add catalog matching logic` |
-| 1.5 | **Unit tests for matching** — the one piece of real logic in the app; cheap to test, expensive to get wrong in front of testers | `test(domain): cover catalog matching rules` |
-| 1.6 | `data/local/` AsyncStorage adapters implementing all four ports | `feat(data): add local storage repository adapters` |
-| 1.7 | `RepositoryProvider` + `useRepositories()` hook; wire into `App.tsx` | `feat(data): add repository provider and hook` |
-| 1.8 | Dev-only seeding/reset helper (wipes AsyncStorage, reloads catalog) | `feat(dev): add data reset helper` |
+Branch `sprint/1-data`, stacked on `sprint/0-foundation` because Sprint 0 was
+still open for review.
+
+| # | Task | Commit | Status |
+|---|---|---|---|
+| 1.1 | `domain/types.ts` — `User`, `SizingProfile`, `Pin`, `Board`, `CatalogItem`, `Order` verbatim from plan §4 | `feat(domain): add core data model types` | ✅ plus `Board.shareCode` for 3.4, and `StyleTag[]` in place of `string[]` |
+| 1.2 | `data/ports.ts` — the four repository interfaces, all methods async | `feat(data): define repository interfaces` | ✅ |
+| 1.3 | Seed catalog: ~40 items across the 7 retailers, tagged + sized, with image URLs | `feat(catalog): add hardcoded catalog seed data` | ✅ 48 items; **imagery is placeholders** |
+| 1.4 | `domain/matching.ts` — tag overlap **and** category-correct size match (`top`→shirtSize, `bottom`→pant waist/inseam, `shoes`→shoeSize, `outerwear`→shirtSize, `accessory`→no size filter) | `feat(domain): add catalog matching logic` | ✅ |
+| 1.5 | **Unit tests for matching** — the one piece of real logic in the app; cheap to test, expensive to get wrong in front of testers | `test(domain): cover catalog matching rules` | ✅ 33 cases, mutation-checked |
+| 1.6 | `data/local/` AsyncStorage adapters implementing all four ports | `feat(data): add local storage repository adapters` | ✅ |
+| 1.7 | `RepositoryProvider` + `useRepositories()` hook; wire into `App.tsx` | `feat(data): add repository provider and hook` | ✅ `flags.backend` added early so 3.3 is genuinely one line |
+| 1.8 | Dev-only seeding/reset helper (wipes AsyncStorage, reloads catalog) | `feat(dev): add data reset helper` | ✅ |
+| — | *Added:* reset reads records back instead of trusting the clear call | `feat(dev): make reset verify itself against the repositories` | ✅ |
 
 **Done when:** tests pass; a throwaway screen can create and read back a board.
+→ Done, and not throwaway. 34 tests pass. The dev panel on Role Select is the
+acceptance check made permanent, and it was exercised on an API 28 emulator:
+seed reported write plus read-back plus a `listByOwner` count, the board
+survived a force-stop, and reset reported the board and user confirmed gone.
+
+Notes carried forward:
+
+- **Catalog imagery is named grey boxes.** Real product photography has to be
+  sourced before testers see the shop grid (4.1) — a prototype full of
+  placeholders cannot tell us whether recipients buy.
+- The matching suite was checked against seven deliberate mutations of
+  `matching.ts` and caught all seven, so a green run means something.
+- Two conventions the catalog and matching rules agree on: every `bottom` is
+  sized waist × inseam, and there are no shorts.
+- Emulator note: the only AVD is API 28 and its system image lives in the
+  **old** SDK, so it needs `ANDROID_SDK_ROOT` pointed at
+  `C:\Program Files (x86)\Android\android-sdk` to launch.
 
 ---
 
