@@ -2,11 +2,36 @@
 
 Execution plan derived from [girlfriend-effect-prototype-plan.md](./girlfriend-effect-prototype-plan.md).
 
+## Progress
+
+Legend: ✅ done · 🟡 partly done (blocker noted) · ⬜ not started
+
+| Sprint | Status |
+|---|---|
+| 0 — Foundation | 🟡 all code landed; native rebuild blocked on Android SDK |
+| 1 — Domain + data layer + catalog | ⬜ |
+| 2 — Stylist flow: boards & pins | ⬜ |
+| 3 — Firestore swap + sharing + intake | ⬜ |
+| 4 — Curated shop, cart, fake checkout | ⬜ |
+| 5 — Confirmation, polish, instrumentation | ⬜ |
+| 6 — Ship to testers | ⬜ |
+
+**Open blockers**
+
+1. **Android SDK is too old to build.** The only SDK on the machine is
+   `C:\Program Files (x86)\Android\android-sdk` — API 30, build-tools 30.0.2,
+   no NDK. `android/build.gradle` needs API 37, build-tools 37.0.0, NDK
+   27.1.12297006. Android Studio 2026.1.4 is installed but has never run its
+   setup wizard. Until this is fixed nothing can be run on a device or
+   emulator, and task 0.3's autolinking check stays unverified.
+2. **Firebase project not yet created** (task 0.7, console-only). Not urgent
+   until Sprint 3, but it gates that sprint entirely.
+
 ## Decisions locked before Sprint 0
 
 | Decision | Choice | Why |
 |---|---|---|
-| Framework | **Bare React Native 0.87.1** (existing scaffold, not Expo) | Repo is already scaffolded and Android Studio is configured. Tradeoff accepted: testers need an installed APK, not an Expo Go QR code. |
+| Framework | **Bare React Native 0.87.1** (existing scaffold, not Expo) | Repo is already scaffolded. Tradeoff accepted: testers need an installed APK, not an Expo Go QR code. *Correction 2026-09-24: this row originally said Android Studio was configured — it is installed but its SDK never was. See blocker 1.* |
 | Language | TypeScript, strict | Already configured. |
 | Navigation | React Navigation 7 (native-stack) | Standard, typed routes. |
 | State | React Context + hooks | Per plan §5. No Redux/Zustand. |
@@ -54,25 +79,34 @@ call replaces them.
 
 ---
 
-## Sprint 0 — Foundation (Day 1, ~half day)
+## Sprint 0 — Foundation (Day 1, ~half day) 🟡
 
 Goal: a running app shell with navigation, tooling, and quality gates.
 
-| # | Task | Commit |
-|---|---|---|
-| 0.1 | Add `CLAUDE.md`: bare RN + TS, Firestore for boards/users/orders, hardcoded catalog, **explicitly no payment processing or real auth** | `docs: add project CLAUDE.md` |
-| 0.2 | Add `typecheck` + `verify` (`lint && typecheck && test`) scripts; enable `strict` TS | `chore: add typecheck and verify scripts` |
-| 0.3 | Install React Navigation 7 + `react-native-screens`, `@react-native-async-storage/async-storage`; Android rebuild to confirm native linking | `chore: add navigation and storage deps` |
-| 0.4 | `src/` skeleton per the tree above (empty barrel files) | `chore: scaffold src directory structure` |
-| 0.5 | Design tokens + `ui/` primitives: `Screen`, `Text`, `Button`, `Card` | `feat(ui): add base components and design tokens` |
-| 0.6 | Root navigator + Role Select screen wired into `App.tsx`; delete `NewAppScreen` boilerplate | `feat(nav): add root navigator and role select screen` |
-| 0.7 | **In parallel, no code:** create the Firebase project in the web console, enable Firestore in test mode, download `google-services.json` (do NOT commit — add to `.gitignore`) | `chore: gitignore firebase credentials` |
+Branch `sprint/0-foundation`. `npm run verify` is green.
+
+| # | Task | Commit | Status |
+|---|---|---|---|
+| 0.1 | Add `CLAUDE.md`: bare RN + TS, Firestore for boards/users/orders, hardcoded catalog, **explicitly no payment processing or real auth** | `docs: add project CLAUDE.md` | ✅ |
+| 0.2 | Add `typecheck` + `verify` (`lint && typecheck && test`) scripts; enable `strict` TS | `chore: add typecheck and verify scripts` | ✅ |
+| 0.3 | Install React Navigation 7 + `react-native-screens`, `@react-native-async-storage/async-storage`; Android rebuild to confirm native linking | `chore: add navigation and storage deps` | 🟡 deps in, `MainActivity.onCreate(null)` added for screens; **rebuild blocked on SDK** |
+| 0.4 | `src/` skeleton per the tree above (empty barrel files) | `chore: scaffold src directory structure` | ✅ |
+| — | *Added:* ESLint rules enforcing `features/` ↛ `data/local|firestore` and domain purity, so `verify` catches boundary breaks instead of review | `chore: enforce architecture boundaries in eslint` | ✅ |
+| 0.5 | Design tokens + `ui/` primitives: `Screen`, `Text`, `Button`, `Card` | `feat(ui): add base components and design tokens` | ✅ |
+| 0.6 | Root navigator + Role Select screen wired into `App.tsx`; delete `NewAppScreen` boilerplate | `feat(nav): add root navigator and role select screen` | ✅ both role buttons inert until 2.1 / 3.5 |
+| 0.7 | **In parallel, no code:** create the Firebase project in the web console, enable Firestore in test mode, download `google-services.json` (do NOT commit — add to `.gitignore`) | `chore: gitignore firebase credentials` | 🟡 gitignore done; **console task outstanding** |
 
 **Done when:** app launches on the emulator, Role Select renders, `npm run verify` is green.
+→ `verify` is green; the emulator half is blocked on the Android SDK.
+
+Two RN 0.87 surprises worth remembering: `StatusBar` no longer accepts
+`backgroundColor` or `translucent` (edge-to-edge made the bar permanently
+translucent), and Jest needed `transformIgnorePatterns` widened because React
+Navigation and `react-native-screens` ship untranspiled ESM.
 
 ---
 
-## Sprint 1 — Domain + data layer + catalog (Day 1–2)
+## Sprint 1 — Domain + data layer + catalog (Day 1–2) ⬜
 
 Goal: every piece of business logic exists and is tested, with zero UI dependency.
 
@@ -91,7 +125,7 @@ Goal: every piece of business logic exists and is tested, with zero UI dependenc
 
 ---
 
-## Sprint 2 — Stylist flow: boards & pins (Day 2–3)
+## Sprint 2 — Stylist flow: boards & pins (Day 2–3) ⬜
 
 | # | Task | Commit |
 |---|---|---|
@@ -109,7 +143,7 @@ Goal: every piece of business logic exists and is tested, with zero UI dependenc
 
 ---
 
-## Sprint 3 — Firestore swap + sharing + sizing intake (Day 3–4)
+## Sprint 3 — Firestore swap + sharing + sizing intake (Day 3–4) ⬜
 
 This is the **highest-risk sprint** — it's the only part that can't be faked,
 and the whole test card depends on it working across two phones. It's placed
@@ -134,7 +168,7 @@ here, not last, so there's slack if native Firebase config fights back.
 
 ---
 
-## Sprint 4 — Curated shop, cart, fake checkout (Day 4–5)
+## Sprint 4 — Curated shop, cart, fake checkout (Day 4–5) ⬜
 
 | # | Task | Commit |
 |---|---|---|
@@ -149,7 +183,7 @@ here, not last, so there's slack if native Firebase config fights back.
 
 ---
 
-## Sprint 5 — Confirmation, polish, instrumentation (Day 5–6)
+## Sprint 5 — Confirmation, polish, instrumentation (Day 5–6) ⬜
 
 | # | Task | Commit |
 |---|---|---|
@@ -162,7 +196,7 @@ here, not last, so there's slack if native Firebase config fights back.
 
 ---
 
-## Sprint 6 — Ship to testers (Day 6–7)
+## Sprint 6 — Ship to testers (Day 6–7) ⬜
 
 | # | Task | Commit |
 |---|---|---|
