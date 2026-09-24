@@ -14,6 +14,9 @@ export type RootStackParamList = {
    */
   PinDetails: { boardId: string; imageUrl?: string };
   ShareBoard: { boardId: string };
+  JoinBoard: undefined;
+  SizingIntake: { boardId: string };
+  BoardReceived: { boardId: string };
 };
 
 declare global {

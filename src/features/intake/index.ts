@@ -1,2 +1,2 @@
 // Recipient sizing intake, shown once (Sprint 3).
-export {};
+export { SizingIntakeScreen } from './SizingIntakeScreen';

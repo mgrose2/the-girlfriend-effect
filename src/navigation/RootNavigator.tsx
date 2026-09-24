@@ -6,8 +6,13 @@ import {
   CreateBoardScreen,
   PinDetailsScreen,
 } from '../features/boards';
+import { SizingIntakeScreen } from '../features/intake';
 import { RoleSelectScreen } from '../features/role';
-import { ShareBoardScreen } from '../features/share';
+import {
+  BoardReceivedScreen,
+  JoinBoardScreen,
+  ShareBoardScreen,
+} from '../features/share';
 import { colors } from '../ui';
 import type { RootStackParamList } from './types';
 
@@ -53,6 +58,23 @@ export function RootNavigator() {
           name="ShareBoard"
           component={ShareBoardScreen}
           options={{ title: 'Send board' }}
+        />
+        <Stack.Screen
+          name="JoinBoard"
+          component={JoinBoardScreen}
+          options={{ title: 'Enter your code' }}
+        />
+        <Stack.Screen
+          name="SizingIntake"
+          component={SizingIntakeScreen}
+          // No back arrow: intake is the price of entry, and reversing out of
+          // it would land on the code screen for a board already claimed.
+          options={{ title: 'Your sizes', headerBackVisible: false }}
+        />
+        <Stack.Screen
+          name="BoardReceived"
+          component={BoardReceivedScreen}
+          options={{ title: 'For you' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

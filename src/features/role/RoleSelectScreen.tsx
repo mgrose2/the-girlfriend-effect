@@ -29,6 +29,10 @@ export function RoleSelectScreen() {
       .finally(() => setBusy(false));
   }, [enterAs, navigation]);
 
+  // No enterAs here: the recipient identity is created once a code actually
+  // resolves, so a mistyped code does not leave a stray user behind.
+  const onRecipient = useCallback(() => navigation.navigate('JoinBoard'), [navigation]);
+
   return (
     <Screen>
       <View style={styles.header}>
@@ -50,15 +54,12 @@ export function RoleSelectScreen() {
           testID="role-recipient"
           label="Someone sent me one"
           variant="secondary"
-          onPress={noop}
+          onPress={onRecipient}
         />
       </View>
     </Screen>
   );
 }
-
-// Placeholder until join-by-code (3.5) exists.
-function noop() {}
 
 const styles = StyleSheet.create({
   header: {
