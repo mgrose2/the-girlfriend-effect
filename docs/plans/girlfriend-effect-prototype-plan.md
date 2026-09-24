@@ -27,6 +27,13 @@ different prototypes.
 | Item selection + fake checkout | Advertising / brand-partner infra |
 | Order confirmation + "donate bag" UI beat | Real return/donation logistics |
 | Hardcoded catalog (H&M, Uniqlo, Abercrombie, J.Crew, Lululemon, Kith, Buck Mason) | Recommendation algorithm — tag matching is enough |
+| Funnel instrumentation (`board_sent` → `order_placed`) | iOS build / TestFlight — Android-only this round |
+
+**Funnel instrumentation is in scope, added 2026-09-24.** The test card's
+question is numeric — does the hit rate clear 50% — and without timestamped
+events at each step the test round ends with impressions instead of a
+number. It's roughly an hour of work and it's the only way the rest of the
+build pays off as evidence.
 
 ## 2. Core flows
 
@@ -126,14 +133,28 @@ recipient's relevant size. That's it — no ML needed for a prototype.
 
 ## 5. Technical architecture
 
-**Framework**: Expo, not bare RN CLI. Given the goal is "usable app ASAP" and
-testable by real people on their own phones, Expo Go's instant iteration
-beats bare CLI's setup overhead. The Android Studio setup you already did
-still isn't wasted — you'll want it eventually for a dev build, and the
-emulator's useful for Android testing regardless of Expo vs bare.
+**Framework**: ~~Expo~~ → **bare React Native 0.87.1**. *Decision changed
+2026-09-24.* This plan originally recommended Expo for its instant
+iteration, but the repo was already scaffolded as bare RN CLI with Android
+Studio configured, and re-scaffolding costs more than it returns on a
+one-week timeline. Accepted tradeoff: **testers install an APK rather than
+scanning a QR code into Expo Go**, and there's no TestFlight path without a
+Mac — so **the test round is Android-only**. If any test couples are
+iPhone-only, that's a recruiting constraint to know up front, not a Day 6
+surprise.
 
 **State management**: React Context + hooks. Redux/Zustand is more
 infrastructure than a prototype this size needs.
+
+**Data access — ports & adapters**: the one piece of "real" architecture
+worth paying for here. All four data concerns (users, boards, catalog,
+orders) sit behind TypeScript interfaces in `src/data/ports.ts`. Screens
+call `useRepositories()` and never import a concrete implementation. Every
+repository method is `async` from day one, even the local ones that resolve
+instantly, so nothing changes shape when a network call replaces a mock.
+This is what lets the app be built against local storage in days 1–3 and
+switched to Firestore in one line on day 4 — hardcode aggressively now,
+without buying a refactor later.
 
 **Backend — the one piece that can't be fully faked**: everything else in
 this app *could* be hardcoded local data, except the board-sharing step —
@@ -159,12 +180,28 @@ use a managed backend to skip that entirely:
 
 ## 6. Build phases
 
-1. **Setup** — Expo project scaffolded, Firebase project created, seed catalog JSON written (a few dozen items across the listed retailers is enough)
+**Timeline: ~1 week** (set 2026-09-24). Task-level breakdown lives in
+[build-sprints.md](./build-sprints.md) — six sprints, ~40 tasks, one commit
+per task, one branch per sprint.
+
+0. **Foundation** — navigation, UI primitives, tooling, Firebase project created (console only, no code)
+1. **Domain + data layer** — types, repository interfaces, seed catalog, matching logic + unit tests
 2. **Board creation** — pin adding, board editor, style tagging
-3. **Sharing + intake** — link/code generation, recipient lands on board, sizing form
+3. **Firestore swap + sharing + intake** — backend adapters, code generation, recipient lands on board, sizing form
 4. **Curated shop + cart** — filtered catalog grid, item selection, fake checkout
-5. **Confirmation + polish** — order summary, donate-bag UI card, pass over visual polish
-6. **Test round** — get it in front of real couples, track sent-boards → completed-orders against your >50% hit-rate target
+5. **Confirmation + polish** — order summary, donate-bag UI card, funnel instrumentation, visual polish
+6. **Ship + test round** — release APK, demo seeds, get it in front of real couples, track sent-boards → completed-orders against the >50% hit-rate target
+
+Two changes from the original sequencing, both deliberate:
+
+- **Firebase moved from "setup" to phase 3.** The *project* gets created on
+  day 1 (a ten-minute console task), but the Firestore adapters land only
+  when sharing actually needs them. It's the single un-fakeable piece and
+  the most likely place for a bare-RN build to lose a day to native config,
+  so it sits mid-week with slack on both sides rather than at either end.
+- **Domain logic and the data layer are their own phase, before any
+  screens.** Matching rules written and tested once, against no UI, is what
+  makes phases 2–5 fast.
 
 Each phase is a natural checkpoint to hand to Claude Code as its own task —
 "build phase 2" is a well-scoped prompt in a way "build the app" isn't.
@@ -221,13 +258,10 @@ data model needs to enforce.
 
 ## 8. Folding this into your existing setup
 
-- Install the `dev-agents` plugin (test-runner, build-debugger, code-reviewer)
-  in this project the same way you did before:
-  ```
-  /plugin marketplace add mgrose2/mark-claude-kit
-  /plugin install dev-agents@mark-claude-kit
-  ```
-- Add a project `CLAUDE.md` stating: Expo + TypeScript, Firebase for boards/
+- ~~Install the `dev-agents` plugin~~ — **done 2026-09-24.** `test-runner`,
+  `build-debugger`, and `code-reviewer` are installed and active in this
+  project via `mgrose2/mark-claude-kit`.
+- Add a project `CLAUDE.md` stating: bare React Native + TypeScript, Firebase for boards/
   users/orders, hardcoded catalog data, **explicitly no payment processing
   or real auth needed** — that last line matters, since without it Claude
   may default to adding security/validation you've deliberately decided to
