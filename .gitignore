@@ -27,7 +27,8 @@ DerivedData
 build/
 .idea
 .gradle
-local.properties
+# local.properties IS committed — it's how the build finds the SDK.
+# Keep it in the repo so a fresh clone can build immediately.
 *.iml
 *.hprof
 .cxx/
