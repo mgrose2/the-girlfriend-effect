@@ -18,9 +18,11 @@ module.exports = {
                   '**/data/local/**',
                   '**/data/firestore',
                   '**/data/firestore/**',
+                  '**/data/seed',
+                  '**/data/seed/**',
                 ],
                 message:
-                  'features/ must not import a concrete adapter. Import types from data/ports and get instances from useRepositories().',
+                  'features/ must not import a concrete adapter or seed data. Import types from data/ports and get instances from useRepositories().',
               },
             ],
           },
