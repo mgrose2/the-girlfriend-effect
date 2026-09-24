@@ -1,4 +1,6 @@
 import { StyleSheet, View } from 'react-native';
+import { flags } from '../../config';
+import { DevToolsPanel } from '../dev';
 import { Button, Screen, Text, spacing } from '../../ui';
 
 /**
@@ -21,6 +23,7 @@ export function RoleSelectScreen() {
       </View>
 
       <View style={styles.actions}>
+        {flags.showDevTools ? <DevToolsPanel /> : null}
         <Button
           testID="role-stylist"
           label="I'm making a board"
