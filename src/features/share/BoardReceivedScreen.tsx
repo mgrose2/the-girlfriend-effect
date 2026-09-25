@@ -6,7 +6,7 @@ import type { RouteProp } from '@react-navigation/native';
 import type { Pin } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
 import { useBoard } from '../boards';
-import { Button, Chip, Screen, Text, colors, radius, spacing } from '../../ui';
+import { Button, Chip, EmptyState, Screen, Text, colors, radius, spacing } from '../../ui';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'BoardReceived'>;
 type Route = RouteProp<RootStackParamList, 'BoardReceived'>;
@@ -42,14 +42,11 @@ export function BoardReceivedScreen() {
   if (board === null) {
     return (
       <Screen>
-        <View style={styles.centered}>
-          <Text variant="heading" center>
-            Board unavailable
-          </Text>
-          <Text variant="body" tone="muted" center style={styles.body}>
-            {error ?? 'That board no longer exists.'}
-          </Text>
-        </View>
+        <EmptyState
+          tone="danger"
+          title="Board unavailable"
+          body={error ?? 'That board no longer exists.'}
+        />
       </Screen>
     );
   }
@@ -102,11 +99,6 @@ function PinTile({ pin }: { pin: Pin }) {
 
 const styles = StyleSheet.create({
   loading: { marginTop: spacing.xl },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   body: { marginTop: spacing.sm },
   header: { paddingHorizontal: spacing.md, paddingTop: spacing.md },
   tags: {

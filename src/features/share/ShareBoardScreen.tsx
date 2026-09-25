@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Share, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Share, StyleSheet } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import { publishBoardImages, useRepositories } from '../../data';
@@ -7,7 +7,7 @@ import type { UploadProgress } from '../../data';
 import { generateShareCode } from '../../domain';
 import type { Board } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
-import { Button, Card, Screen, Text, colors, spacing } from '../../ui';
+import { Button, Card, EmptyState, Screen, Text, colors, spacing } from '../../ui';
 import { useFunnel } from '../analytics';
 
 type Route = RouteProp<RootStackParamList, 'ShareBoard'>;
@@ -109,14 +109,7 @@ export function ShareBoardScreen() {
   if (error !== null) {
     return (
       <Screen>
-        <View style={styles.centered}>
-          <Text variant="heading" center>
-            Could not share this board
-          </Text>
-          <Text variant="body" tone="muted" center style={styles.body}>
-            {error}
-          </Text>
-        </View>
+        <EmptyState tone="danger" title="Could not share this board" body={error} />
       </Screen>
     );
   }
@@ -167,11 +160,6 @@ function invitation(title: string, code: string): string {
 }
 
 const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   loading: { marginTop: spacing.xl },
   title: { marginTop: spacing.lg },
   body: { marginTop: spacing.sm },

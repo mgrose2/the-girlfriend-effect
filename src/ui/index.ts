@@ -5,6 +5,8 @@ export { Card } from './Card';
 export type { CardProps } from './Card';
 export { Chip } from './Chip';
 export type { ChipProps } from './Chip';
+export { EmptyState } from './EmptyState';
+export type { EmptyStateProps } from './EmptyState';
 export { Screen } from './Screen';
 export type { ScreenProps } from './Screen';
 export { Text } from './Text';

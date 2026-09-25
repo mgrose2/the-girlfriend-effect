@@ -5,7 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { Pin } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
-import { Button, Chip, Screen, Text, colors, radius, spacing } from '../../ui';
+import { Button, Chip, EmptyState, Screen, Text, colors, radius, spacing } from '../../ui';
 import { pickImageFromLibrary } from './pickImage';
 import { useBoard } from './useBoard';
 
@@ -91,14 +91,12 @@ export function BoardEditorScreen() {
   if (board === null) {
     return (
       <Screen>
-        <View style={styles.centered}>
-          <Text variant="heading" center>
-            Board unavailable
-          </Text>
-          <Text variant="body" tone="muted" center style={styles.centeredBody}>
-            {error ?? 'That board no longer exists.'}
-          </Text>
-        </View>
+        <EmptyState
+          tone="danger"
+          title="Board unavailable"
+          body={error ?? 'That board no longer exists.'}
+          action={{ label: 'Back to your boards', onPress: () => navigation.goBack() }}
+        />
       </Screen>
     );
   }

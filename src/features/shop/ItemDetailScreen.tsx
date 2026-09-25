@@ -7,7 +7,7 @@ import { useRepositories } from '../../data';
 import { overlappingTags, requiredSize } from '../../domain';
 import type { Board, CatalogItem } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
-import { Button, Chip, Screen, Text, colors, radius, spacing } from '../../ui';
+import { Button, Chip, EmptyState, Screen, Text, colors, radius, spacing } from '../../ui';
 import { useFunnel } from '../analytics';
 import { useCart } from '../cart';
 import { useRequiredUser } from '../session';
@@ -69,11 +69,10 @@ export function ItemDetailScreen() {
   if (item === null) {
     return (
       <Screen>
-        <View style={styles.centered}>
-          <Text variant="heading" center>
-            This piece is no longer listed
-          </Text>
-        </View>
+        <EmptyState
+          title="This piece is no longer listed"
+          action={{ label: 'Back to your picks', onPress: () => navigation.goBack() }}
+        />
       </Screen>
     );
   }
@@ -154,11 +153,6 @@ export function ItemDetailScreen() {
 
 const styles = StyleSheet.create({
   loading: { marginTop: spacing.xl },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   imageWrap: {
     width: '100%',
     aspectRatio: 3 / 4,

@@ -6,7 +6,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { requiredSize } from '../../domain';
 import type { CatalogItem } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
-import { Button, Screen, Text, colors, radius, spacing } from '../../ui';
+import { Button, EmptyState, Screen, Text, colors, radius, spacing } from '../../ui';
 import { useRequiredUser } from '../session';
 import { formatPrice } from '../shop';
 import { useCart } from './CartProvider';
@@ -28,20 +28,11 @@ export function CartScreen() {
   if (cart.items.length === 0) {
     return (
       <Screen>
-        <View style={styles.centered}>
-          <Text variant="heading" center>
-            Your bag is empty
-          </Text>
-          <Text variant="body" tone="muted" center style={styles.body}>
-            Add something she picked and it shows up here.
-          </Text>
-          <Button
-            label="Back to your picks"
-            block={false}
-            style={styles.emptyCta}
-            onPress={() => navigation.goBack()}
-          />
-        </View>
+        <EmptyState
+          title="Your bag is empty"
+          body="Add something she picked and it shows up here."
+          action={{ label: 'Back to your picks', onPress: () => navigation.goBack() }}
+        />
       </Screen>
     );
   }
@@ -129,13 +120,6 @@ function CartLine({
 }
 
 const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  body: { marginTop: spacing.sm },
-  emptyCta: { marginTop: spacing.lg },
   list: { padding: spacing.md },
   line: {
     flexDirection: 'row',
