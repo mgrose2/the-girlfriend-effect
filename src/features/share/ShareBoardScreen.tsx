@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Share, StyleSheet, View } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
-import { useRepositories } from '../../data';
+import { publishBoardImages, useRepositories } from '../../data';
+import type { UploadProgress } from '../../data';
 import { generateShareCode } from '../../domain';
 import type { Board } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
@@ -19,27 +20,41 @@ export function ShareBoardScreen() {
 
   const [board, setBoard] = useState<Board | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<UploadProgress | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     /**
-     * Assigns a code the first time the board is shared and reuses it after.
-     * Regenerating on every visit would invalidate a code already sitting in
-     * somebody's text messages.
+     * Uploads the images, then assigns a code the first time and reuses it
+     * after. Regenerating on every visit would invalidate a code already
+     * sitting in somebody's text messages.
+     *
+     * Images go first deliberately: the code must not exist until the board
+     * behind it is actually viewable, or the recipient types it in and gets a
+     * grid of broken tiles.
      */
     async function ensureShared(): Promise<Board> {
       const found = await repos.boards.getById(boardId);
       if (found === null) {
         throw new Error('That board no longer exists.');
       }
+
+      const published = await publishBoardImages(found, next => {
+        if (!cancelled) {
+          setProgress(next);
+        }
+      });
+      const uploaded = published !== found;
+
       if (found.shareCode !== undefined) {
-        return found;
+        // Nothing new to say, but the URLs may have changed.
+        return uploaded ? repos.boards.save(published) : found;
       }
 
       const shareCode = await allocateCode();
       const shared: Board = {
-        ...found,
+        ...published,
         shareCode,
         sentAt: found.sentAt ?? new Date().toISOString(),
       };
@@ -104,6 +119,11 @@ export function ShareBoardScreen() {
     return (
       <Screen>
         <ActivityIndicator color={colors.accent} style={styles.loading} />
+        {progress !== null && progress.done < progress.total ? (
+          <Text variant="caption" tone="muted" center style={styles.body}>
+            Sending your pictures… {progress.done} of {progress.total}
+          </Text>
+        ) : null}
       </Screen>
     );
   }

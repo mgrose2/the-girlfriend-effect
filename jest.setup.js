@@ -14,6 +14,13 @@ jest.mock('@react-native-firebase/app', () => ({
   getApps: jest.fn(() => []),
 }));
 
+jest.mock('@react-native-firebase/storage', () => ({
+  getStorage: jest.fn(),
+  ref: jest.fn(),
+  putFile: jest.fn(),
+  getDownloadURL: jest.fn(),
+}));
+
 jest.mock('@react-native-firebase/firestore', () => ({
   getFirestore: jest.fn(),
   collection: jest.fn(),
