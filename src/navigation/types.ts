@@ -21,6 +21,7 @@ export type RootStackParamList = {
   ItemDetail: { boardId: string; itemId: string };
   Cart: { boardId: string };
   Checkout: { boardId: string };
+  Confirmation: { orderId: string };
 };
 
 declare global {

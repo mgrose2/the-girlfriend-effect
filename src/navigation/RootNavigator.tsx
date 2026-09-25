@@ -6,7 +6,8 @@ import {
   CreateBoardScreen,
   PinDetailsScreen,
 } from '../features/boards';
-import { CartScreen } from '../features/cart';
+import { CartScreen, CheckoutScreen } from '../features/cart';
+import { ConfirmationScreen } from '../features/confirmation';
 import { SizingIntakeScreen } from '../features/intake';
 import { RoleSelectScreen } from '../features/role';
 import {
@@ -93,6 +94,18 @@ export function RootNavigator() {
           name="Cart"
           component={CartScreen}
           options={{ title: 'Your bag' }}
+        />
+        <Stack.Screen
+          name="Checkout"
+          component={CheckoutScreen}
+          options={{ title: 'Check out' }}
+        />
+        <Stack.Screen
+          name="Confirmation"
+          component={ConfirmationScreen}
+          // No back arrow: the bag and checkout behind this belong to an order
+          // that has already been placed.
+          options={{ title: 'Order placed', headerBackVisible: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

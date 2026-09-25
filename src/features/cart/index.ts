@@ -2,3 +2,4 @@
 export { CartProvider, useCart } from './CartProvider';
 export type { CartValue } from './CartProvider';
 export { CartScreen } from './CartScreen';
+export { CheckoutScreen } from './CheckoutScreen';
