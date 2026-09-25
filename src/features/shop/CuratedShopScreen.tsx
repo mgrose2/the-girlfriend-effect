@@ -1,11 +1,12 @@
 import { useCallback, useLayoutEffect } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { CatalogItem } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
-import { Screen, Text, colors, spacing } from '../../ui';
+import { Screen, Text, colors, radius, spacing } from '../../ui';
+import { useCart } from '../cart';
 import { useRequiredUser } from '../session';
 import { ShopItemCard } from './ShopItemCard';
 import { useCuratedShop } from './useCuratedShop';
@@ -20,12 +21,25 @@ export function CuratedShopScreen() {
   const { boardId } = useRoute<Route>().params;
   const recipient = useRequiredUser();
   const { board, items, loading, error } = useCuratedShop(boardId, recipient.sizing);
+  const cart = useCart();
 
   useLayoutEffect(() => {
-    if (board !== null) {
-      navigation.setOptions({ title: board.title });
-    }
-  }, [navigation, board]);
+    navigation.setOptions({
+      ...(board === null ? {} : { title: board.title }),
+      // In the header rather than a floating button: the grid scrolls, and a
+      // bag that scrolls away is a bag he forgets he filled.
+      //
+      // headerRight must be a function — that is React Navigation's API, not a
+      // nested component definition, and BagButton is declared at module level.
+      // eslint-disable-next-line react/no-unstable-nested-components
+      headerRight: () => (
+        <BagButton
+          count={cart.count}
+          onPress={() => navigation.navigate('Cart', { boardId })}
+        />
+      ),
+    });
+  }, [navigation, board, cart.count, boardId]);
 
   const openItem = useCallback(
     (item: CatalogItem) => navigation.navigate('ItemDetail', { boardId, itemId: item.id }),
@@ -79,6 +93,23 @@ export function CuratedShopScreen() {
   );
 }
 
+function BagButton({ count, onPress }: { count: number; onPress: () => void }) {
+  const full = count > 0;
+  return (
+    <Pressable
+      testID="open-bag"
+      accessibilityRole="button"
+      accessibilityLabel={`Bag, ${count} item${count === 1 ? '' : 's'}`}
+      onPress={onPress}
+      hitSlop={12}
+      style={[styles.bagButton, full && styles.bagButtonFull]}>
+      <Text variant="label" tone={full ? 'inverse' : 'default'}>
+        Bag{full ? ` ${count}` : ''}
+      </Text>
+    </Pressable>
+  );
+}
+
 function summary(count: number, tags: string[]): string {
   const what = count === 1 ? '1 piece' : `${count} pieces`;
   return tags.length === 0
@@ -117,4 +148,15 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: spacing.md, paddingTop: spacing.md, paddingBottom: spacing.sm },
   grid: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl },
   row: { gap: spacing.md, marginBottom: spacing.lg },
+  bagButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  bagButtonFull: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
 });

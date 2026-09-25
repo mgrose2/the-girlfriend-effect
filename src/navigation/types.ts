@@ -19,6 +19,8 @@ export type RootStackParamList = {
   BoardReceived: { boardId: string };
   CuratedShop: { boardId: string };
   ItemDetail: { boardId: string; itemId: string };
+  Cart: { boardId: string };
+  Checkout: { boardId: string };
 };
 
 declare global {

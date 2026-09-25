@@ -6,6 +6,7 @@ import {
   CreateBoardScreen,
   PinDetailsScreen,
 } from '../features/boards';
+import { CartScreen } from '../features/cart';
 import { SizingIntakeScreen } from '../features/intake';
 import { RoleSelectScreen } from '../features/role';
 import {
@@ -87,6 +88,11 @@ export function RootNavigator() {
           name="ItemDetail"
           component={ItemDetailScreen}
           options={{ title: '', presentation: 'modal' }}
+        />
+        <Stack.Screen
+          name="Cart"
+          component={CartScreen}
+          options={{ title: 'Your bag' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
