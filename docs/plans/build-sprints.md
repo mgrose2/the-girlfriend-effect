@@ -11,20 +11,14 @@ Legend: ✅ done · 🟡 partly done (blocker noted) · ⬜ not started
 | 0 — Foundation | ✅ all code landed, native build verified |
 | 1 — Domain + data layer + catalog | ✅ 34 tests green, round-trip verified on emulator |
 | 2 — Stylist flow: boards & pins | ✅ full stylist flow driven on emulator |
-| 3 — Firestore swap + sharing + intake | 🟡 Firestore live and verified; **image upload blocked on Storage** |
+| 3 — Firestore swap + sharing + intake | ✅ Firestore and Storage both live and verified |
 | 4 — Curated shop, cart, fake checkout | ⬜ |
 | 5 — Confirmation, polish, instrumentation | ⬜ |
 | 6 — Ship to testers | ⬜ |
 
 **Open blockers**
 
-1. **Firebase Storage is not provisioned.** Firestore works; Storage does
-   not. The configured bucket and the `appspot.com` fallback both return 404
-   from the host, identically to a bucket that does not exist, and the device
-   reports `object-not-found`. This blocks 3.6, and with it the only thing
-   that makes a shared board render on the *other* phone. Fix in the console:
-   **Build → Storage → Get started** (may require the Blaze plan).
-2. **Catalog imagery does not load.** The `placehold.co` URLs used by the seed
+1. **Catalog imagery does not load.** The `placehold.co` URLs used by the seed
    catalog and demo pins render as "Image unavailable" on device, while other
    remote images load fine. Sprint 4's shop grid is 48 of these. Needs real
    product photography, or at minimum a host that actually resolves.
@@ -198,7 +192,7 @@ Notes carried forward:
 
 ---
 
-## Sprint 3 — Firestore swap + sharing + sizing intake (Day 3–4) 🟡
+## Sprint 3 — Firestore swap + sharing + sizing intake (Day 3–4) ✅
 
 This is the **highest-risk sprint** — it's the only part that can't be faked,
 and the whole test card depends on it working across two phones. It's placed
@@ -214,7 +208,7 @@ Branch `sprint/3-sharing`, stacked on `sprint/2-boards`.
 | — | *Supporting:* share code generation and parsing | `feat(domain): add share code generation and parsing` | ✅ 16 tests, mutation-checked |
 | 3.4 | Share sheet — generate a short human-typable code (e.g. `TGE-4F9K`), mark board `sentAt`, native share to text | `feat(share): add share sheet and code generation` | ✅ |
 | 3.5 | Join screen — enter code, resolve board, claim as recipient | `feat(share): add join by code flow` | ✅ |
-| 3.6 | Pin images: upload to Firebase Storage on share (local file URIs are invisible to the other phone) | `feat(share): upload pin images on send` | 🟡 written; **only the failure path is verified** — Storage unprovisioned |
+| 3.6 | Pin images: upload to Firebase Storage on share (local file URIs are invisible to the other phone) | `feat(share): upload pin images on send` | ✅ object in bucket, URL rewritten, renders for the recipient |
 | 3.7 | Sizing intake form — shirt, pant waist/inseam, shoe, optional fit; persisted to the recipient's profile, shown once | `feat(intake): add sizing intake form` | ✅ landed inside the 3.5 commit, not its own |
 | — | *Fix:* role switch no longer orphans boards | `fix(session): reuse the existing identity when switching roles` | ✅ |
 
@@ -226,9 +220,14 @@ The full flow was driven on one device: create → send → code → enter it
 lowercase and unhyphenated → claimed → intake → board; rejoining skips intake,
 and the stylist sees the board marked *sent*.
 
-**"with images" is the part still missing.** Storage is unprovisioned, so pin
-images never leave the phone and a real phone-B would show broken tiles. Two
-phones have not been tested at all.
+Images now work too: sending uploads local pin images to Storage and rewrites
+the pins to download URLs. Verified three ways — the object exists in the
+bucket, the Firestore document holds a `firebasestorage.googleapis.com` URL,
+and the recipient's board renders that image.
+
+**Two phones have still not been tested.** Both roles were driven on one
+emulator. The data is genuinely shared now rather than device-local, so this
+should work, but "should" is not "did" — worth proving before Sprint 6.
 
 Notes carried forward:
 
