@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { resetAllData, seedSampleBoard, useRepositories } from '../../data';
+import { resetAllData, seedDemoBoards, seedSampleBoard, useRepositories } from '../../data';
 import type { SeedResult } from '../../data';
 import { Button, Card, Text, spacing } from '../../ui';
 
@@ -41,6 +41,14 @@ export function DevToolsPanel() {
     });
   }, [repos, run]);
 
+  const onSeedDemo = useCallback(() => {
+    run('Seeding demo boards', async () => {
+      const boards = await seedDemoBoards(repos);
+      setLastSeed(null);
+      return boards.map(b => `${b.title}: ${b.shareCode}`).join(' · ');
+    });
+  }, [repos, run]);
+
   const onReset = useCallback(() => {
     run('Resetting', async () => {
       await resetAllData(repos);
@@ -64,6 +72,13 @@ export function DevToolsPanel() {
           variant="secondary"
           disabled={busy}
           onPress={onSeed}
+        />
+        <Button
+          testID="dev-seed-demo"
+          label="Seed demo boards"
+          variant="secondary"
+          disabled={busy}
+          onPress={onSeedDemo}
         />
         <Button
           testID="dev-reset"

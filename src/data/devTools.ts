@@ -7,8 +7,8 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { newId } from '../domain';
-import type { Board, User } from '../domain';
+import { generateShareCode, newId } from '../domain';
+import type { Board, StyleTag, User } from '../domain';
 import { FIRESTORE_LOCAL_KEYS } from './firestore';
 import { clearLocalStorage } from './local';
 import type { Repositories } from './ports';
@@ -91,4 +91,61 @@ export async function seedSampleBoard(repos: Repositories): Promise<SeedResult> 
   }
 
   return { stylist, board: readBack };
+}
+
+export type DemoBoard = { title: string; shareCode: string };
+
+type DemoBoardSpec = {
+  title: string;
+  styleTags: StyleTag[];
+  pinLabels: string[];
+};
+
+const DEMO_BOARDS: DemoBoardSpec[] = [
+  { title: 'Fall Layers', styleTags: ['old money', 'workwear'], pinLabels: ['Chore Coat', 'Oxford Shirt'] },
+  { title: 'Street Ready', styleTags: ['streetwear'], pinLabels: ['Graphic Tee', 'Cargo Pants', 'Low Sneakers'] },
+  { title: 'Weekend Casual', styleTags: ['athleisure', 'minimal'], pinLabels: ['Half-Zip', 'Jogger'] },
+  { title: 'Office Neutral', styleTags: ['workwear', 'minimal'], pinLabels: ['Blazer', 'Trouser', 'Loafer'] },
+];
+
+/**
+ * Writes several boards that are already "sent" — a share code and `sentAt`
+ * assigned up front, no stylist device required to produce them. A tester
+ * can join one straight away, which is the point: 6.4 exists so nobody
+ * installing the APK stares at an empty app before they can try anything.
+ *
+ * A fresh demo stylist is created each call rather than reused, so re-running
+ * this after a reset can't collide with a stylist id that no longer exists.
+ */
+export async function seedDemoBoards(repos: Repositories): Promise<DemoBoard[]> {
+  const stylist: User = {
+    id: newId('user'),
+    name: 'Demo Stylist',
+    role: 'stylist',
+  };
+  await repos.users.save(stylist);
+
+  const results: DemoBoard[] = [];
+  for (const spec of DEMO_BOARDS) {
+    const now = new Date().toISOString();
+    const board: Board = {
+      id: newId('board'),
+      ownerId: stylist.id,
+      title: spec.title,
+      styleTags: spec.styleTags,
+      pins: spec.pinLabels.map(label => ({
+        id: newId('pin'),
+        // .png matters — placehold.co serves SVG otherwise, which RN cannot render.
+        imageUrl: `https://placehold.co/600x800/EFE0D9/1C1917.png?text=${encodeURIComponent(label)}`,
+        tags: spec.styleTags,
+      })),
+      createdAt: now,
+      sentAt: now,
+      shareCode: generateShareCode(),
+    };
+    const saved = await repos.boards.save(board);
+    results.push({ title: saved.title, shareCode: saved.shareCode ?? '' });
+  }
+
+  return results;
 }

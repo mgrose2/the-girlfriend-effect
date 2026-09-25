@@ -1,7 +1,7 @@
 // Ports and adapters. `features/` imports types from `./ports` and gets
 // instances from `useRepositories()` — never from `local/` or `firestore/`.
-export { resetAllData, seedSampleBoard } from './devTools';
-export type { SeedResult } from './devTools';
+export { resetAllData, seedDemoBoards, seedSampleBoard } from './devTools';
+export type { DemoBoard, SeedResult } from './devTools';
 export { publishBoardImages } from './publishBoard';
 export type { UploadProgress } from './publishBoard';
 export { RepositoryProvider, useRepositories } from './RepositoryProvider';
