@@ -15,6 +15,10 @@ buildscript {
         classpath("com.android.tools.build:gradle")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+        // Reads android/app/google-services.json at build time. That file is
+        // gitignored, so a fresh clone without it fails here — deliberately,
+        // rather than silently building an app that cannot reach Firebase.
+        classpath("com.google.gms:google-services:4.4.2")
     }
 }
 
