@@ -70,13 +70,14 @@ export async function seedSampleBoard(repos: Repositories): Promise<SeedResult> 
     pins: [
       {
         id: newId('pin'),
-        imageUrl: 'https://placehold.co/600x800/EFE0D9/1C1917?text=Chore+Coat',
+        // .png matters — placehold.co serves SVG otherwise, which RN cannot render.
+        imageUrl: 'https://placehold.co/600x800/EFE0D9/1C1917.png?text=Chore+Coat',
         note: 'Something like this but in olive',
         tags: ['workwear'],
       },
       {
         id: newId('pin'),
-        imageUrl: 'https://placehold.co/600x800/EFE0D9/1C1917?text=Oxford+Shirt',
+        imageUrl: 'https://placehold.co/600x800/EFE0D9/1C1917.png?text=Oxford+Shirt',
         tags: ['old money'],
       },
     ],

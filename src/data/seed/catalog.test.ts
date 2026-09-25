@@ -56,4 +56,13 @@ describe('catalog seed', () => {
   it('gives every item an image url', () => {
     expect(CATALOG.filter(item => !item.imageUrl).map(i => i.id)).toEqual([]);
   });
+
+  it('requests a raster image, not SVG', () => {
+    // placehold.co serves SVG unless the path carries an extension, and React
+    // Native's Image silently renders nothing for SVG — every tile came back
+    // blank on device with no error. Guarding the extension here because the
+    // failure mode gives no other signal.
+    const bad = CATALOG.filter(item => !/\.(png|jpe?g|webp)(\?|$)/i.test(item.imageUrl));
+    expect(bad.map(i => i.id)).toEqual([]);
+  });
 });

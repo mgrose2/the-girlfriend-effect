@@ -22,12 +22,16 @@ import type { CatalogItem } from '../../domain';
 const ONE_SIZE = ['OS'];
 
 /**
- * Placeholder imagery. Real product photography has to be sourced before the
- * test round — a shopping app full of grey boxes will not tell us anything
- * about whether recipients complete a purchase. Tracked against task 4.1.
+ * Placeholder imagery. Still not real product photography — that has to be
+ * sourced before the test round, since a shop full of grey boxes cannot tell
+ * us anything about whether recipients buy.
+ *
+ * The `.png` is load-bearing: placehold.co serves SVG by default, and React
+ * Native's Image cannot render SVG, so the extensionless URL produced blank
+ * tiles on device while failing silently.
  */
 function placeholder(name: string): string {
-  return `https://placehold.co/600x800/EFE0D9/1C1917?text=${encodeURIComponent(name)}`;
+  return `https://placehold.co/600x800/EFE0D9/1C1917.png?text=${encodeURIComponent(name)}`;
 }
 
 type SeedItem = Omit<CatalogItem, 'imageUrl'> & {
