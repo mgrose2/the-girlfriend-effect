@@ -1,2 +1,5 @@
 // Curated shop grid and item detail (Sprint 4).
-export {};
+export { CuratedShopScreen } from './CuratedShopScreen';
+export { formatPrice } from './formatPrice';
+export { ShopItemCard } from './ShopItemCard';
+export { useCuratedShop } from './useCuratedShop';

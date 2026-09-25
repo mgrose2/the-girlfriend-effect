@@ -1,11 +1,14 @@
+import { useCallback } from 'react';
 import { ActivityIndicator, FlatList, Image, StyleSheet, View } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { Pin } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
 import { useBoard } from '../boards';
 import { Button, Chip, Screen, Text, colors, radius, spacing } from '../../ui';
 
+type Nav = NativeStackNavigationProp<RootStackParamList, 'BoardReceived'>;
 type Route = RouteProp<RootStackParamList, 'BoardReceived'>;
 
 const COLUMNS = 2;
@@ -19,8 +22,14 @@ const COLUMNS = 2;
  * moment that makes this feel personal rather than like an ad.
  */
 export function BoardReceivedScreen() {
+  const navigation = useNavigation<Nav>();
   const { boardId } = useRoute<Route>().params;
   const { board, loading, error } = useBoard(boardId);
+
+  const openShop = useCallback(
+    () => navigation.navigate('CuratedShop', { boardId }),
+    [navigation, boardId],
+  );
 
   if (loading) {
     return (
@@ -70,12 +79,7 @@ export function BoardReceivedScreen() {
       />
 
       <View style={styles.footer}>
-        {/* The curated shop is 4.1. Until then this is the honest end of the
-            recipient's road, not a button that pretends otherwise. */}
-        <Button label="Shop these picks" disabled onPress={noop} />
-        <Text variant="caption" tone="muted" center style={styles.footnote}>
-          Your shop opens next sprint.
-        </Text>
+        <Button testID="open-shop" label="Shop these picks" onPress={openShop} />
       </View>
     </Screen>
   );
@@ -95,8 +99,6 @@ function PinTile({ pin }: { pin: Pin }) {
     </View>
   );
 }
-
-function noop() {}
 
 const styles = StyleSheet.create({
   loading: { marginTop: spacing.xl },
@@ -134,5 +136,4 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     backgroundColor: colors.background,
   },
-  footnote: { marginTop: spacing.xs },
 });

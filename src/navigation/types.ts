@@ -17,6 +17,8 @@ export type RootStackParamList = {
   JoinBoard: undefined;
   SizingIntake: { boardId: string };
   BoardReceived: { boardId: string };
+  CuratedShop: { boardId: string };
+  ItemDetail: { boardId: string; itemId: string };
 };
 
 declare global {
