@@ -13,7 +13,7 @@ Legend: ✅ done · 🟡 partly done (blocker noted) · ⬜ not started
 | 2 — Stylist flow: boards & pins | ✅ full stylist flow driven on emulator |
 | 3 — Firestore swap + sharing + intake | ✅ Firestore and Storage both live and verified |
 | 4 — Curated shop, cart, fake checkout | ✅ full recipient run verified, order in Firestore |
-| 5 — Confirmation, polish, instrumentation | ⬜ |
+| 5 — Confirmation, polish, instrumentation | ✅ `npm run verify` green, not yet device-verified |
 | 6 — Ship to testers | ⬜ |
 
 **Open blockers**
@@ -292,16 +292,39 @@ Notes carried forward:
 
 ---
 
-## Sprint 5 — Confirmation, polish, instrumentation (Day 5–6) ⬜
+## Sprint 5 — Confirmation, polish, instrumentation (Day 5–6) ✅
 
-| # | Task | Commit |
-|---|---|---|
-| 5.1 | Confirmation screen — order summary, items, total | `feat(confirmation): add order confirmation screen` |
-| 5.2 | Donate-bag UI card on confirmation | `feat(confirmation): add donate bag card` |
-| 5.3 | Stylist-side receipt — "he ordered 3 of your picks", closes the emotional loop and is what drives a *second* board | `feat(boards): show order status on board list` |
-| 5.4 | **Funnel instrumentation** — timestamped events to Firestore: `board_sent`, `board_opened`, `intake_completed`, `item_added`, `order_placed`. This is how you measure the >50% hit rate; without it the test round produces anecdotes, not data. | `feat(analytics): add funnel event tracking` |
-| 5.5 | Visual polish pass — spacing, typography, loading and empty states | `feat(ui): polish pass across screens` |
-| 5.6 | Error/edge states — bad code, empty board, no matching items, offline | `feat: handle error and empty states` |
+| # | Task | Commit | Status |
+|---|---|---|---|
+| 5.1 | Confirmation screen — order summary, items, total | `feat(confirmation): add order confirmation screen` | ✅ |
+| 5.2 | Donate-bag UI card on confirmation | `feat(confirmation): add donate bag card` | ✅ |
+| 5.3 | Stylist-side receipt — "he ordered 3 of your picks", closes the emotional loop and is what drives a *second* board | `feat(boards): show order status on board list` | ✅ |
+| 5.4 | **Funnel instrumentation** — timestamped events to Firestore: `board_sent`, `board_opened`, `intake_completed`, `item_added`, `order_placed`. This is how you measure the >50% hit rate; without it the test round produces anecdotes, not data. | `feat(analytics): add funnel event tracking` | ✅ |
+| 5.5 | Visual polish pass — spacing, typography, loading and empty states | `feat(ui): polish pass across screens` | ✅ ad-hoc "nothing here" blocks (three different spacings) consolidated into one `EmptyState` primitive |
+| 5.6 | Error/edge states — bad code, empty board, no matching items, offline | `feat: handle error and empty states` | ✅ shop gates on missing sizing, errors get a retry action, bad-code message covers the offline-cache case; empty board is structurally impossible — the send button is hidden until a board has a pin |
+
+**Done when:** confirmation shows a real summary, the stylist sees order status,
+funnel events land in Firestore, and the UI doesn't fall over on bad input.
+→ Done. `npm run verify` is green (51 tests). Not device-verified this pass —
+the two open blockers from Sprint 3/4 (catalog imagery, two-phone test) are
+still outstanding and belong to Sprint 6's manual QA pass, not this one.
+
+Notes carried forward:
+
+- **5.5 and 5.6 landed as one working tree** rather than two cleanly separable
+  diffs — the `EmptyState` component's own `tone` prop (`neutral` vs `danger`)
+  is the mechanism both tasks needed, so splitting further than "the primitive
+  and its plain wiring" (5.5) vs "the new gates and messages built on top of
+  it" (5.6) wasn't worth forcing. Same pattern as 3.7 folding into 3.5.
+- **"Empty board" turned out not to need handling.** `BoardEditorScreen` only
+  shows "Send it" once `board.pins.length > 0`, so a zero-pin board can't
+  reach a recipient in the first place — the edge case is prevented, not
+  caught.
+- **No real offline detection was added** (no `NetInfo`, no connectivity
+  gate). Errors from a dropped connection surface as whatever Firestore
+  returns — a wrong-looking "not found" on join, a write failure on checkout —
+  and the copy now accounts for that rather than adding a new dependency to
+  detect it directly.
 
 ---
 
