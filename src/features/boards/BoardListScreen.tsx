@@ -7,6 +7,7 @@ import type { RootStackParamList } from '../../navigation';
 import { Button, Screen, Text, colors, spacing } from '../../ui';
 import { useRequiredUser } from '../session';
 import { BoardCard } from './BoardCard';
+import { useBoardOrders } from './useBoardOrders';
 import { useBoards } from './useBoards';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'BoardList'>;
@@ -15,6 +16,7 @@ export function BoardListScreen() {
   const navigation = useNavigation<Nav>();
   const stylist = useRequiredUser();
   const { boards, loading, error } = useBoards(stylist.id);
+  const orders = useBoardOrders(boards);
 
   const openBoard = useCallback(
     (board: Board) => navigation.navigate('BoardEditor', { boardId: board.id }),
@@ -29,7 +31,11 @@ export function BoardListScreen() {
         data={boards}
         keyExtractor={board => board.id}
         renderItem={({ item }) => (
-          <BoardCard board={item} onPress={() => openBoard(item)} />
+          <BoardCard
+            board={item}
+            orders={orders.get(item.id)}
+            onPress={() => openBoard(item)}
+          />
         )}
         contentContainerStyle={styles.list}
         // undefined rather than null: FlatList's slot types do not accept null.

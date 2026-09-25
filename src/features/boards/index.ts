@@ -6,4 +6,6 @@ export { CreateBoardScreen } from './CreateBoardScreen';
 export { pickImageFromLibrary } from './pickImage';
 export { PinDetailsScreen } from './PinDetailsScreen';
 export { useBoard } from './useBoard';
+export { useBoardOrders } from './useBoardOrders';
+export type { BoardOrderSummary } from './useBoardOrders';
 export { useBoards } from './useBoards';

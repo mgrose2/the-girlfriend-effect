@@ -1,11 +1,19 @@
 import { Image, StyleSheet, View } from 'react-native';
 import type { Board } from '../../domain';
 import { Card, Chip, Text, colors, radius, spacing } from '../../ui';
+import type { BoardOrderSummary } from './useBoardOrders';
 
 /** How many pin thumbnails fit on a row of the card without crowding it. */
 const PREVIEW_COUNT = 4;
 
-export function BoardCard({ board, onPress }: { board: Board; onPress: () => void }) {
+export type BoardCardProps = {
+  board: Board;
+  /** Present once anything has been ordered off this board. */
+  orders?: BoardOrderSummary;
+  onPress: () => void;
+};
+
+export function BoardCard({ board, orders, onPress }: BoardCardProps) {
   const overflow = Math.max(0, board.pins.length - PREVIEW_COUNT);
   // When there is overflow, the last slot becomes the "+N" tile.
   const preview = board.pins.slice(0, overflow > 0 ? PREVIEW_COUNT - 1 : PREVIEW_COUNT);
@@ -51,9 +59,20 @@ export function BoardCard({ board, onPress }: { board: Board; onPress: () => voi
         </View>
       ) : null}
 
-      <Text variant="caption" tone="muted" style={styles.meta}>
-        {describe(board)}
-      </Text>
+      {orders === undefined ? (
+        <Text variant="caption" tone="muted" style={styles.meta}>
+          {describe(board)}
+        </Text>
+      ) : (
+        <View style={styles.receipt}>
+          <Text variant="label" tone="accent">
+            {ordered(orders.itemCount)}
+          </Text>
+          <Text variant="caption" tone="muted" style={styles.receiptMeta}>
+            {describe(board)}
+          </Text>
+        </View>
+      )}
     </Card>
   );
 }
@@ -61,6 +80,16 @@ export function BoardCard({ board, onPress }: { board: Board; onPress: () => voi
 function describe(board: Board): string {
   const pins = board.pins.length === 1 ? '1 pin' : `${board.pins.length} pins`;
   return board.sentAt === undefined ? `${pins} · draft` : `${pins} · sent`;
+}
+
+/**
+ * Says "your picks", not "items". The number is only meaningful to her because
+ * they were hers.
+ */
+function ordered(itemCount: number): string {
+  return itemCount === 1
+    ? 'He ordered 1 of your picks'
+    : `He ordered ${itemCount} of your picks`;
 }
 
 const styles = StyleSheet.create({
@@ -90,4 +119,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   meta: { marginTop: spacing.sm },
+  receipt: { marginTop: spacing.sm },
+  receiptMeta: { marginTop: 2 },
 });
