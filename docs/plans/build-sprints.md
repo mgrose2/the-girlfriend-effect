@@ -11,19 +11,23 @@ Legend: ✅ done · 🟡 partly done (blocker noted) · ⬜ not started
 | 0 — Foundation | ✅ all code landed, native build verified |
 | 1 — Domain + data layer + catalog | ✅ 34 tests green, round-trip verified on emulator |
 | 2 — Stylist flow: boards & pins | ✅ full stylist flow driven on emulator |
-| 3 — Firestore swap + sharing + intake | 🟡 sharing and intake done; **all Firebase work blocked** |
+| 3 — Firestore swap + sharing + intake | 🟡 Firestore live and verified; **image upload blocked on Storage** |
 | 4 — Curated shop, cart, fake checkout | ⬜ |
 | 5 — Confirmation, polish, instrumentation | ⬜ |
 | 6 — Ship to testers | ⬜ |
 
 **Open blockers**
 
-1. **Firebase project not yet created** (task 0.7, console-only). This is now
-   live, not theoretical: it blocks 3.1, 3.2, 3.3 and 3.6, which is the whole
-   cross-device half of the product. Everything else in Sprint 3 is done.
-   Installing the native Firebase packages before `google-services.json`
-   exists would break the Android build for every other sprint, so they are
-   deliberately not installed yet.
+1. **Firebase Storage is not provisioned.** Firestore works; Storage does
+   not. The configured bucket and the `appspot.com` fallback both return 404
+   from the host, identically to a bucket that does not exist, and the device
+   reports `object-not-found`. This blocks 3.6, and with it the only thing
+   that makes a shared board render on the *other* phone. Fix in the console:
+   **Build → Storage → Get started** (may require the Blaze plan).
+2. **Catalog imagery does not load.** The `placehold.co` URLs used by the seed
+   catalog and demo pins render as "Image unavailable" on device, while other
+   remote images load fine. Sprint 4's shop grid is 48 of these. Needs real
+   product photography, or at minimum a host that actually resolves.
 2. **Catalog imagery is placeholders.** Named grey boxes, not product photos.
    Fine for building against; has to be replaced before the test round, since
    a shop grid of grey boxes cannot tell us whether recipients buy. Due with
@@ -204,21 +208,27 @@ Branch `sprint/3-sharing`, stacked on `sprint/2-boards`.
 
 | # | Task | Commit | Status |
 |---|---|---|---|
-| 3.1 | Install `@react-native-firebase/app` + `/firestore`, Android native config, verify connection | `chore: add firebase dependencies and config` | ⛔ **blocked** — needs the Firebase project |
-| 3.2 | `data/firestore/` adapters implementing the same four ports | `feat(data): add firestore repository adapters` | ⛔ **blocked** — writable but unverifiable, and needs 3.1's types |
-| 3.3 | Flip `RepositoryProvider` to Firestore behind a `config` flag; keep local adapters for tests/offline dev | `feat(data): switch active adapters to firestore` | ⛔ **blocked** — `flags.backend` already exists and throws for `firestore` |
+| 3.1 | Install `@react-native-firebase/app` + `/firestore`, Android native config, verify connection | `chore: add firebase dependencies and config` | ✅ |
+| 3.2 | `data/firestore/` adapters implementing the same four ports | `feat(data): add firestore repository adapters` | ✅ |
+| 3.3 | Flip `RepositoryProvider` to Firestore behind a `config` flag; keep local adapters for tests/offline dev | `feat(data): switch active adapters to firestore` | ✅ confirmed server-side, not just in-app |
 | — | *Supporting:* share code generation and parsing | `feat(domain): add share code generation and parsing` | ✅ 16 tests, mutation-checked |
 | 3.4 | Share sheet — generate a short human-typable code (e.g. `TGE-4F9K`), mark board `sentAt`, native share to text | `feat(share): add share sheet and code generation` | ✅ |
 | 3.5 | Join screen — enter code, resolve board, claim as recipient | `feat(share): add join by code flow` | ✅ |
-| 3.6 | Pin images: upload to Firebase Storage on share (local file URIs are invisible to the other phone) | `feat(share): upload pin images on send` | ⛔ **blocked** — needs Firebase Storage |
+| 3.6 | Pin images: upload to Firebase Storage on share (local file URIs are invisible to the other phone) | `feat(share): upload pin images on send` | 🟡 written; **only the failure path is verified** — Storage unprovisioned |
 | 3.7 | Sizing intake form — shirt, pant waist/inseam, shoe, optional fit; persisted to the recipient's profile, shown once | `feat(intake): add sizing intake form` | ✅ landed inside the 3.5 commit, not its own |
 | — | *Fix:* role switch no longer orphans boards | `fix(session): reuse the existing identity when switching roles` | ✅ |
 
 **Done when:** a board created on phone A is visible, with images, on phone B after entering the code.
-→ **Not met, and cannot be until Firebase exists.** What is verified is the
-whole flow on one device: create → send → code `TGE-WDQK` → back out → enter
-the code lowercase and unhyphenated → claimed → intake → board. Rejoining
-skips intake, and switching back to stylist shows the board marked *sent*.
+→ **Half met.** Boards, users and orders now live in Firestore, confirmed
+server-side over the REST API rather than trusting the app — Firestore caches
+writes offline, so an in-app write plus read-back proves nothing on its own.
+The full flow was driven on one device: create → send → code → enter it
+lowercase and unhyphenated → claimed → intake → board; rejoining skips intake,
+and the stylist sees the board marked *sent*.
+
+**"with images" is the part still missing.** Storage is unprovisioned, so pin
+images never leave the phone and a real phone-B would show broken tiles. Two
+phones have not been tested at all.
 
 Notes carried forward:
 
