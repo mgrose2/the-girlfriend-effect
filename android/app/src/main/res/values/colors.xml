@@ -1,0 +1,5 @@
+<resources>
+    <!-- Matches ui/tokens.ts colors.background — keeps the cold-start window
+         from flashing white before the JS bundle draws its first frame. -->
+    <color name="splashBackground">#FAF7F5</color>
+</resources>
