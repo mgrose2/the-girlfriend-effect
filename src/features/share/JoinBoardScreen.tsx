@@ -34,7 +34,13 @@ export function JoinBoardScreen() {
     (async () => {
       const board = await repos.boards.findByShareCode(normalized);
       if (board === null) {
-        setError('No board with that code. Check it against the message he sent.');
+        // Mentions connection because Firestore answers from its local cache
+        // when offline: an unseen board comes back as "not found" rather than
+        // as an error, and blaming the code would send him to double-check
+        // something that was right all along.
+        setError(
+          "No board with that code. Check it against her message, and that you're online.",
+        );
         return;
       }
 

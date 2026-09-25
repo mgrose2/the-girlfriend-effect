@@ -13,7 +13,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { overlappingTags } from '../../domain';
 import type { CatalogItem, Category } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
-import { Chip, Screen, Text, colors, radius, spacing } from '../../ui';
+import { Chip, EmptyState, Screen, Text, colors, radius, spacing } from '../../ui';
 import { useCart } from '../cart';
 import { useRequiredUser } from '../session';
 import { ShopItemCard } from './ShopItemCard';
@@ -79,14 +79,29 @@ export function CuratedShopScreen() {
   if (error !== null) {
     return (
       <Screen>
-        <View style={styles.centered}>
-          <Text variant="heading" center>
-            Could not open your shop
-          </Text>
-          <Text variant="body" tone="muted" center style={styles.body}>
-            {error}
-          </Text>
-        </View>
+        <EmptyState
+          tone="danger"
+          title="Could not open your shop"
+          body={error}
+          action={{ label: 'Try again', onPress: () => navigation.replace('CuratedShop', { boardId }) }}
+        />
+      </Screen>
+    );
+  }
+
+  // Without sizes every category filters to nothing, and the empty shop would
+  // blame the board for what is really a missing profile.
+  if (recipient.sizing === undefined) {
+    return (
+      <Screen>
+        <EmptyState
+          title="We need your sizes first"
+          body="The shop only shows things that actually fit, so it needs your sizes before it can show you anything."
+          action={{
+            label: 'Add your sizes',
+            onPress: () => navigation.navigate('SizingIntake', { boardId }),
+          }}
+        />
       </Screen>
     );
   }
@@ -194,15 +209,10 @@ function EmptyShop({ filtered }: { filtered: boolean }) {
   }
 
   return (
-    <View style={styles.centered}>
-      <Text variant="heading" center>
-        Nothing in your size yet
-      </Text>
-      <Text variant="body" tone="muted" center style={styles.body}>
-        These styles exist in the catalog, but not in the sizes you entered.
-        Check your sizes, or ask her to widen the board's styles.
-      </Text>
-    </View>
+    <EmptyState
+      title="Nothing in your size yet"
+      body="These styles exist in the catalog, but not in the sizes you entered. Check your sizes, or ask her to widen the board's styles."
+    />
   );
 }
 
@@ -214,7 +224,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xxl,
   },
-  body: { marginTop: spacing.sm },
   header: { paddingHorizontal: spacing.md, paddingTop: spacing.md, paddingBottom: spacing.sm },
   filters: {
     gap: spacing.sm,
