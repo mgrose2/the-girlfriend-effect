@@ -1,11 +1,19 @@
-import { useCallback, useLayoutEffect } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import type { CatalogItem } from '../../domain';
+import { overlappingTags } from '../../domain';
+import type { CatalogItem, Category } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
-import { Screen, Text, colors, radius, spacing } from '../../ui';
+import { Chip, Screen, Text, colors, radius, spacing } from '../../ui';
 import { useCart } from '../cart';
 import { useRequiredUser } from '../session';
 import { ShopItemCard } from './ShopItemCard';
@@ -20,8 +28,22 @@ export function CuratedShopScreen() {
   const navigation = useNavigation<Nav>();
   const { boardId } = useRoute<Route>().params;
   const recipient = useRequiredUser();
-  const { board, items, loading, error } = useCuratedShop(boardId, recipient.sizing);
+  const [category, setCategory] = useState<Category | null>(null);
+  const { board, matched, items, categories, loading, error } = useCuratedShop(
+    boardId,
+    recipient.sizing,
+    category,
+  );
   const cart = useCart();
+
+  // Computed once per board rather than per card, so scrolling the grid does
+  // not re-derive the same overlap for every tile.
+  const reasonsByItem = useMemo(() => {
+    if (board === null) {
+      return new Map<string, string[]>();
+    }
+    return new Map(matched.map(item => [item.id, overlappingTags(item, board)]));
+  }, [matched, board]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -78,15 +100,43 @@ export function CuratedShopScreen() {
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.grid}
         ListHeaderComponent={
-          <View style={styles.header}>
-            <Text variant="body" tone="muted">
-              {summary(items.length, board?.styleTags ?? [])}
-            </Text>
+          <View>
+            <View style={styles.header}>
+              <Text variant="body" tone="muted">
+                {summary(matched.length, board?.styleTags ?? [])}
+              </Text>
+            </View>
+            {categories.length > 1 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filters}>
+                <Chip
+                  testID="filter-all"
+                  label="Everything"
+                  selected={category === null}
+                  onPress={() => setCategory(null)}
+                />
+                {categories.map(entry => (
+                  <Chip
+                    key={entry}
+                    testID={`filter-${entry}`}
+                    label={LABELS[entry]}
+                    selected={category === entry}
+                    onPress={() => setCategory(category === entry ? null : entry)}
+                  />
+                ))}
+              </ScrollView>
+            ) : null}
           </View>
         }
-        ListEmptyComponent={<EmptyShop />}
+        ListEmptyComponent={<EmptyShop filtered={category !== null} />}
         renderItem={({ item }) => (
-          <ShopItemCard item={item} onPress={() => openItem(item)} />
+          <ShopItemCard
+            item={item}
+            reasons={reasonsByItem.get(item.id) ?? []}
+            onPress={() => openItem(item)}
+          />
         )}
       />
     </Screen>
@@ -117,12 +167,32 @@ function summary(count: number, tags: string[]): string {
     : `${what} in your size, picked for ${tags.join(' and ')}`;
 }
 
+/** Plural nouns, since these label groups of things rather than one item. */
+const LABELS: Record<Category, string> = {
+  top: 'Tops',
+  bottom: 'Bottoms',
+  outerwear: 'Outerwear',
+  shoes: 'Shoes',
+  accessory: 'Accessories',
+};
+
 /**
- * Reached when the board's tags and the recipient's sizes have no overlap in
- * the catalog. Says which of the two is the constraint, because "nothing here"
- * with no explanation reads as the app being broken.
+ * Two different empties. A filter with no results is the recipient's own doing
+ * and needs no apology; a board with nothing at all is a dead end, and saying
+ * only "nothing here" would read as the app being broken on the one screen
+ * where giving up costs us the whole measurement.
  */
-function EmptyShop() {
+function EmptyShop({ filtered }: { filtered: boolean }) {
+  if (filtered) {
+    return (
+      <View style={styles.centered}>
+        <Text variant="body" tone="muted" center>
+          Nothing in that category. Try another.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.centered}>
       <Text variant="heading" center>
@@ -146,6 +216,11 @@ const styles = StyleSheet.create({
   },
   body: { marginTop: spacing.sm },
   header: { paddingHorizontal: spacing.md, paddingTop: spacing.md, paddingBottom: spacing.sm },
+  filters: {
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+  },
   grid: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl },
   row: { gap: spacing.md, marginBottom: spacing.lg },
   bagButton: {
