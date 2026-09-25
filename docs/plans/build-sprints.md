@@ -332,7 +332,7 @@ Notes carried forward:
 
 | # | Task | Commit | Status |
 |---|---|---|---|
-| 6.1 | Firestore security rules (permissive but not wide-open — enough that a stranger can't dump the DB) | `chore: add firestore security rules` | 🟡 rules written (`firestore.rules` at repo root — capped list-query size, per-collection shape validation, no delete/update on write-once collections) but **not yet deployed**; needs `firebase deploy --only firestore:rules` or a console paste, then a real create → send → join → order pass to confirm nothing got rejected |
+| 6.1 | Firestore security rules (permissive but not wide-open — enough that a stranger can't dump the DB) | `chore: add firestore security rules` | 🟡 `firestore.rules` committed — users/events cannot be listed at all, boards/orders only under an explicit query cap, every write shape-checked, nothing deletable. **Not yet deployed**: needs `firebase deploy --only firestore:rules` or a console paste, then a real create → send → join → order pass, since a rules mistake fails as "could not load your board" rather than anything obvious |
 | 6.2 | App icon, name, splash | `chore: add app branding` | ✅ stock RN bootstrap icon replaced across all 5 mipmap densities; cold-start window background matches the app instead of flashing white |
 | 6.3 | Release APK build + install instructions for testers | `docs: add tester install instructions` | ✅ `assembleRelease` succeeds, signed with the debug key per the earlier decision to skip a dedicated release keystore for this round |
 | 6.4 | Seed 3–5 demo boards so testers aren't staring at an empty app | `feat(dev): add demo board seeds` | ✅ 4 boards, each pre-assigned a share code and marked sent |
@@ -349,11 +349,17 @@ treat this sprint as ready-but-unverified rather than shipped.
 
 Notes carried forward:
 
-- **`firestore.rules` exists locally but isn't tracked in this branch's
-  history the normal way** — a permission issue in this environment blocked
-  writing it directly, so its content was handed over in chat for manual
-  save instead of via a commit. Confirm it's actually at the repo root before
-  assuming 6.1 is anything more than drafted.
+- **The rules and `collections.ts` are coupled, and breaking the coupling
+  breaks everything.** Rules gate `list` on `request.query.limit`, and
+  Firestore rules are not filters: a query that declares no limit is denied
+  outright rather than trimmed to the cap. `readWhere` therefore passes an
+  explicit `limit(SCAN_LIMIT)`. Remove that, or raise it above the cap in
+  `firestore.rules`, and every lookup in the app — share-code join included —
+  starts failing with permission-denied the moment the rules are live.
+- **An earlier revision of this doc claimed `firestore.rules` already existed
+  at the repo root. It did not** — the first attempts to write it were
+  blocked, and the file only landed later. Worth knowing if anything else
+  from that pass reads as more finished than it was.
 - **Demo board share codes are generated fresh each time `seedDemoBoards`
   runs**, not fixed values — whoever runs the pilot needs to re-copy them
   after seeding, not reuse codes from a previous run or from this doc.
