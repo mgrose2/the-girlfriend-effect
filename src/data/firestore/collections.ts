@@ -9,9 +9,19 @@ import {
   getDoc,
   getDocs,
   getFirestore,
+  limit,
   query,
   where,
 } from '@react-native-firebase/firestore';
+
+/**
+ * Every query says how much it is willing to read, because `firestore.rules`
+ * gates `list` on `request.query.limit`. Rules are not filters: a query with
+ * no explicit limit fails that check outright rather than being trimmed to
+ * it, so dropping this would deny every lookup in the app — the share-code
+ * join included. Keep it at or below the cap in the rules file.
+ */
+export const SCAN_LIMIT = 50;
 export const COLLECTIONS = {
   users: 'users',
   boards: 'boards',
@@ -60,7 +70,9 @@ export async function readWhere<T>(
   field: string,
   value: unknown,
 ): Promise<T[]> {
-  const snapshot = await getDocs(query(collectionRef(name), where(field, '==', value)));
+  const snapshot = await getDocs(
+    query(collectionRef(name), where(field, '==', value), limit(SCAN_LIMIT)),
+  );
   return snapshot.docs.map(entry => ({
     ...(entry.data() as T),
     id: entry.id,

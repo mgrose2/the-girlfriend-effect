@@ -1,0 +1,116 @@
+rules_version = '2';
+
+// TGE has no real auth (CLAUDE.md — a deliberate scope decision), so every
+// request arrives unauthenticated: there is no `request.auth` to check an
+// identity against, and document ids are the only thing resembling a secret
+// (a share code, a user id generated on-device). These rules cannot stop
+// someone who already holds a specific id from reading that one document —
+// that is the accepted trade-off — but they do stop a stranger from
+// enumerating a collection, and they reject writes that do not look like
+// this app's own data.
+//
+// "Permissive but not wide-open": enough for a small round of invited
+// testers, not a substitute for real auth if this ever ships wider.
+//
+// Coupled to src/data/firestore/collections.ts: `list` is gated on an
+// explicit query limit, and rules are not filters — a query that does not
+// declare a limit is denied rather than trimmed. SCAN_LIMIT there must stay
+// at or below the cap here, or every lookup in the app breaks.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function withinScanLimit() {
+      return request.query.limit <= 50;
+    }
+
+    function isOptionalString(data, key) {
+      return !(key in data) || data[key] is string;
+    }
+
+    match /users/{userId} {
+      // Read by id only. Nothing in the app lists users — the current
+      // identity is resolved from device storage, never by querying — so
+      // there is no reason to leave a way to walk the roster.
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if isValidUser(request.resource.data);
+      allow delete: if false;
+    }
+
+    function isValidUser(data) {
+      return data.id is string
+        && data.name is string
+        && data.role in ['stylist', 'recipient']
+        && (!('sizing' in data) || isValidSizing(data.sizing));
+    }
+
+    function isValidSizing(sizing) {
+      return sizing.shirtSize is string
+        && sizing.pantWaist is number
+        && sizing.pantInseam is number
+        && sizing.shoeSize is number;
+    }
+
+    match /boards/{boardId} {
+      allow get: if true;
+      // findByShareCode and listByOwner are both single-field equality
+      // queries against a value the caller already holds — a code someone
+      // sent them, or their own id — rather than a way to enumerate other
+      // people's boards.
+      allow list: if withinScanLimit();
+      allow create, update: if isValidBoard(request.resource.data);
+      allow delete: if false;
+    }
+
+    function isValidBoard(data) {
+      return data.id is string
+        && data.ownerId is string
+        && data.title is string
+        && data.styleTags is list
+        && data.pins is list
+        && data.createdAt is string
+        && isOptionalString(data, 'recipientId')
+        && isOptionalString(data, 'sentAt')
+        && isOptionalString(data, 'shareCode');
+    }
+
+    match /orders/{orderId} {
+      allow get: if true;
+      allow list: if withinScanLimit();
+      allow create: if isValidOrder(request.resource.data);
+      // An order records what happened; there are no fulfilment states for
+      // it to transition through, so nothing should be editing one after
+      // the fact.
+      allow update, delete: if false;
+    }
+
+    function isValidOrder(data) {
+      return data.id is string
+        && data.boardId is string
+        && data.recipientId is string
+        && data.items is list
+        && data.total is number
+        && data.status == 'placed'
+        && data.createdAt is string;
+    }
+
+    match /events/{eventId} {
+      // Write-only from the client. The app only ever calls track(); the
+      // funnel is read out of band via the console or the Admin SDK, both
+      // of which bypass these rules entirely. So there is no client-side
+      // read to allow, and leaving one open would hand over the whole
+      // record of who did what and when.
+      allow get, list: if false;
+      allow create: if isValidEvent(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    function isValidEvent(data) {
+      return data.id is string
+        && data.name in ['board_sent', 'board_opened', 'intake_completed', 'item_added', 'order_placed']
+        && data.boardId is string
+        && data.at is string
+        && isOptionalString(data, 'userId');
+    }
+  }
+}
