@@ -6,39 +6,41 @@
  * Gated at the call site by `flags.showDevTools`, which is `__DEV__`.
  */
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { newId } from '../domain';
 import type { Board, User } from '../domain';
+import { FIRESTORE_LOCAL_KEYS } from './firestore';
 import { clearLocalStorage } from './local';
 import type { Repositories } from './ports';
 
 /**
- * Wipes every key this app owns. The catalog needs no reload — it is seed
- * data served straight from the bundle, never persisted.
+ * Clears this device's data. The catalog needs no reload — it is seed data
+ * served straight from the bundle, never persisted.
+ *
+ * Device-local only, deliberately. On the Firestore backend the boards and
+ * orders stay in the shared database: a tester resetting their own phone must
+ * not delete the board their partner is still looking at. What goes is the
+ * identity, which is what makes the app behave like a fresh install.
  *
  * Pass the ids of records you expect to be gone and they are read back through
  * the repositories afterwards. Jest cannot cover this — AsyncStorage is native
  * — so the check has to happen on device or not at all.
  */
-export async function resetAllData(
-  repos?: Repositories,
-  expectGone?: { boardId?: string; userId?: string },
-): Promise<void> {
+export async function resetAllData(repos?: Repositories): Promise<void> {
   await clearLocalStorage();
+  await AsyncStorage.removeMany([...FIRESTORE_LOCAL_KEYS]);
 
-  if (repos === undefined || expectGone === undefined) {
+  if (repos === undefined) {
     return;
   }
-  if (expectGone.boardId !== undefined) {
-    const board = await repos.boards.getById(expectGone.boardId);
-    if (board !== null) {
-      throw new Error(`Reset left board ${expectGone.boardId} behind`);
-    }
-  }
-  if (expectGone.userId !== undefined) {
-    const user = await repos.users.getById(expectGone.userId);
-    if (user !== null) {
-      throw new Error(`Reset left user ${expectGone.userId} behind`);
-    }
+
+  // Verify the one thing that must be true on either backend: this device no
+  // longer has an identity. Checking that a board is gone would be wrong on
+  // Firestore, where the board is supposed to survive — it belongs to the
+  // other phone too.
+  const current = await repos.users.getCurrent();
+  if (current !== null) {
+    throw new Error(`Reset left ${current.id} signed in`);
   }
 }
 

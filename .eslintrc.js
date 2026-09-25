@@ -3,6 +3,11 @@ module.exports = {
   extends: '@react-native',
   overrides: [
     {
+      // Jest globals are not in scope for the config-level setup file.
+      files: ['jest.setup.js'],
+      env: { jest: true },
+    },
+    {
       // The no-refactor guarantee: screens talk to `data/ports` types and get
       // instances from `useRepositories()`. If a screen can reach a concrete
       // adapter, swapping the backend stops being a one-line change.

@@ -9,10 +9,14 @@ export const flags = {
   /**
    * Which adapter set RepositoryProvider hands out.
    *
-   * Sprint 3.3 flips this to 'firestore'. That flip is the whole payoff of the
-   * ports layer: it is the only line that changes, and no screen notices.
+   * Flipped to 'firestore' in 3.3, and that really was the only line that
+   * changed — no screen was touched.
+   *
+   * Set it back to 'local' to work offline or on a machine without
+   * google-services.json. Everything except cross-device sharing behaves the
+   * same either way.
    */
-  backend: 'local' as Backend,
+  backend: 'firestore' as Backend,
 
   /** Shows the dev-only data reset control. Off before the APK ships (6.3). */
   showDevTools: __DEV__,

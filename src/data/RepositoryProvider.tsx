@@ -10,6 +10,7 @@
 import { createContext, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { flags } from '../config';
+import { createFirestoreRepositories } from './firestore';
 import { createLocalRepositories } from './local';
 import type { Repositories } from './ports';
 
@@ -50,11 +51,6 @@ function selectRepositories(backend: typeof flags.backend): Repositories {
     case 'local':
       return createLocalRepositories();
     case 'firestore':
-      // Sprint 3.2 builds these. Failing loudly beats silently serving local
-      // data from a build that believes it is talking to Firestore.
-      throw new Error(
-        'Firestore adapters are not built yet — they land in Sprint 3.2. ' +
-          'Set flags.backend to "local" until then.',
-      );
+      return createFirestoreRepositories();
   }
 }

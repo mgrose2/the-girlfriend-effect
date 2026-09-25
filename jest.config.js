@@ -1,5 +1,6 @@
 module.exports = {
   preset: '@react-native/jest-preset',
+  setupFiles: ['<rootDir>/jest.setup.js'],
   // These ship untranspiled ESM, which the preset's default of ignoring all of
   // node_modules would leave unprocessed. Add to this list whenever a new
   // native package turns up as "Cannot use import statement outside a module".

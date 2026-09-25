@@ -17,9 +17,9 @@ export function DevToolsPanel() {
   const repos = useRepositories();
   const [status, setStatus] = useState('Idle');
   const [busy, setBusy] = useState(false);
-  // Remembered so Reset can prove the records really went, rather than just
-  // reporting that the clear call did not throw.
-  const [lastSeed, setLastSeed] = useState<SeedResult | null>(null);
+  // Kept so Seed can report the board it just wrote; Reset clears it so the
+  // panel does not claim a board that this device can no longer reach.
+  const [, setLastSeed] = useState<SeedResult | null>(null);
 
   // Returns void rather than a promise: these are button handlers, and an
   // unawaited promise here is the point, not an oversight.
@@ -43,19 +43,11 @@ export function DevToolsPanel() {
 
   const onReset = useCallback(() => {
     run('Resetting', async () => {
-      const expected = lastSeed;
-      await resetAllData(
-        repos,
-        expected === null
-          ? undefined
-          : { boardId: expected.board.id, userId: expected.stylist.id },
-      );
+      await resetAllData(repos);
       setLastSeed(null);
-      return expected === null
-        ? 'Storage cleared'
-        : 'Storage cleared · seeded board and user confirmed gone';
+      return 'This device cleared · signed out confirmed';
     });
-  }, [lastSeed, repos, run]);
+  }, [repos, run]);
 
   return (
     <Card style={styles.card}>
