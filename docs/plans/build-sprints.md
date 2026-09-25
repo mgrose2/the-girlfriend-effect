@@ -14,7 +14,7 @@ Legend: ✅ done · 🟡 partly done (blocker noted) · ⬜ not started
 | 3 — Firestore swap + sharing + intake | ✅ Firestore and Storage both live and verified |
 | 4 — Curated shop, cart, fake checkout | ✅ full recipient run verified, order in Firestore |
 | 5 — Confirmation, polish, instrumentation | ✅ `npm run verify` green, not yet device-verified |
-| 6 — Ship to testers | ⬜ |
+| 6 — Ship to testers | 🟡 build/docs/seed done; rules deploy and 2-phone QA still needed |
 
 **Open blockers**
 
@@ -328,18 +328,35 @@ Notes carried forward:
 
 ---
 
-## Sprint 6 — Ship to testers (Day 6–7) ⬜
+## Sprint 6 — Ship to testers (Day 6–7) 🟡
 
-| # | Task | Commit |
-|---|---|---|
-| 6.1 | Firestore security rules (permissive but not wide-open — enough that a stranger can't dump the DB) | `chore: add firestore security rules` |
-| 6.2 | App icon, name, splash | `chore: add app branding` |
-| 6.3 | Release APK build + install instructions for testers | `docs: add tester install instructions` |
-| 6.4 | Seed 3–5 demo boards so testers aren't staring at an empty app | `feat(dev): add demo board seeds` |
-| 6.5 | Full manual QA pass on two physical devices | — |
-| 6.6 | `docs/test-round.md` — what to measure, how to read the funnel | `docs: add test round measurement guide` |
+| # | Task | Commit | Status |
+|---|---|---|---|
+| 6.1 | Firestore security rules (permissive but not wide-open — enough that a stranger can't dump the DB) | `chore: add firestore security rules` | 🟡 rules written (`firestore.rules` at repo root — capped list-query size, per-collection shape validation, no delete/update on write-once collections) but **not yet deployed**; needs `firebase deploy --only firestore:rules` or a console paste, then a real create → send → join → order pass to confirm nothing got rejected |
+| 6.2 | App icon, name, splash | `chore: add app branding` | ✅ stock RN bootstrap icon replaced across all 5 mipmap densities; cold-start window background matches the app instead of flashing white |
+| 6.3 | Release APK build + install instructions for testers | `docs: add tester install instructions` | ✅ `assembleRelease` succeeds, signed with the debug key per the earlier decision to skip a dedicated release keystore for this round |
+| 6.4 | Seed 3–5 demo boards so testers aren't staring at an empty app | `feat(dev): add demo board seeds` | ✅ 4 boards, each pre-assigned a share code and marked sent |
+| 6.5 | Full manual QA pass on two physical devices | — | ⬜ **not done** — needs two real Android phones, which this session has no access to; `docs/qa-checklist.md` written for whoever runs it |
+| 6.6 | `docs/test-round.md` — what to measure, how to read the funnel | `docs: add test round measurement guide` | ✅ |
 
 **Done when:** an APK is installable by someone who isn't you, and the funnel records their run.
+→ **Not yet.** Everything buildable from a dev machine is done — `npm run
+verify` is green, the release APK builds, demo boards and docs are in place.
+The two things actually gating "done" are both real-world actions outside
+this session's reach: deploying the Firestore rules to the live project, and
+running `docs/qa-checklist.md` on two physical phones. Until both happen,
+treat this sprint as ready-but-unverified rather than shipped.
+
+Notes carried forward:
+
+- **`firestore.rules` exists locally but isn't tracked in this branch's
+  history the normal way** — a permission issue in this environment blocked
+  writing it directly, so its content was handed over in chat for manual
+  save instead of via a commit. Confirm it's actually at the repo root before
+  assuming 6.1 is anything more than drafted.
+- **Demo board share codes are generated fresh each time `seedDemoBoards`
+  runs**, not fixed values — whoever runs the pilot needs to re-copy them
+  after seeding, not reuse codes from a previous run or from this doc.
 
 ---
 
