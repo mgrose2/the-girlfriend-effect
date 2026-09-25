@@ -60,8 +60,13 @@ export function sizeFits(item: CatalogItem, sizing: SizingProfile): boolean {
  * The size string an item must stock, per plan §4:
  * top and outerwear use shirt size, bottom uses waist x inseam, shoes use shoe
  * size, and accessories are unsized.
+ *
+ * Exported so the shop can *show* the size it matched on. That keeps the size
+ * derivable rather than something the recipient picks and the order stores —
+ * matchCatalog already guarantees the item stocks it, so a separate stored
+ * copy could only ever disagree.
  */
-function requiredSize(category: Category, sizing: SizingProfile): string | null {
+export function requiredSize(category: Category, sizing: SizingProfile): string | null {
   switch (category) {
     case 'top':
     case 'outerwear':
