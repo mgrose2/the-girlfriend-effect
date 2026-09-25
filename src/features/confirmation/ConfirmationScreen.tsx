@@ -10,6 +10,7 @@ import type { RootStackParamList } from '../../navigation';
 import { Button, Card, Screen, Text, colors, radius, spacing } from '../../ui';
 import { useSession } from '../session';
 import { formatPrice } from '../shop';
+import { DonateBagCard } from './DonateBagCard';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Confirmation'>;
 type Route = RouteProp<RootStackParamList, 'Confirmation'>;
@@ -98,6 +99,8 @@ export function ConfirmationScreen() {
           </View>
         </Card>
       ) : null}
+
+      <DonateBagCard />
 
       <Card style={styles.notice}>
         <Text variant="label">Nothing was actually charged</Text>
