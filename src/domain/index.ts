@@ -1,5 +1,7 @@
 // Pure types and logic. No React, no I/O, no imports from outside `domain/`.
 // Everything here is unit-testable without a renderer or a device.
+export { FUNNEL_EVENTS } from './funnel';
+export type { FunnelEvent, FunnelEventName } from './funnel';
 export { newId } from './ids';
 export { matchCatalog, overlappingTags, requiredSize, sizeFits } from './matching';
 export { generateShareCode, isValidShareCode, normalizeShareCode } from './shareCode';

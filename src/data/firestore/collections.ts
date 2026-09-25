@@ -16,6 +16,7 @@ export const COLLECTIONS = {
   users: 'users',
   boards: 'boards',
   orders: 'orders',
+  events: 'events',
 } as const;
 
 export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];

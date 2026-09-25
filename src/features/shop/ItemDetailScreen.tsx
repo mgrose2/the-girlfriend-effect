@@ -8,6 +8,7 @@ import { overlappingTags, requiredSize } from '../../domain';
 import type { Board, CatalogItem } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
 import { Button, Chip, Screen, Text, colors, radius, spacing } from '../../ui';
+import { useFunnel } from '../analytics';
 import { useCart } from '../cart';
 import { useRequiredUser } from '../session';
 import { formatPrice } from './formatPrice';
@@ -21,6 +22,7 @@ export function ItemDetailScreen() {
   const repos = useRepositories();
   const recipient = useRequiredUser();
   const cart = useCart();
+  const track = useFunnel();
 
   const [item, setItem] = useState<CatalogItem | null>(null);
   const [board, setBoard] = useState<Board | null>(null);
@@ -49,9 +51,12 @@ export function ItemDetailScreen() {
   const onAdd = useCallback(() => {
     if (item !== null) {
       cart.add(item, boardId);
+      // Per item, so the gap between browsing and ordering is visible rather
+      // than collapsing into a single "did he buy" bit.
+      track('item_added', boardId, { itemId: item.id, price: item.price });
       navigation.goBack();
     }
-  }, [item, cart, boardId, navigation]);
+  }, [item, cart, boardId, navigation, track]);
 
   if (loading) {
     return (

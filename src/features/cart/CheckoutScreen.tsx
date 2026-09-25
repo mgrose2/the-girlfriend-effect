@@ -8,6 +8,7 @@ import { newId } from '../../domain';
 import type { Order } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
 import { Button, Card, Screen, Text, TextField, colors, spacing } from '../../ui';
+import { useFunnel } from '../analytics';
 import { useRequiredUser } from '../session';
 import { formatPrice } from '../shop';
 import { useCart } from './CartProvider';
@@ -30,6 +31,7 @@ export function CheckoutScreen() {
   const repos = useRepositories();
   const recipient = useRequiredUser();
   const cart = useCart();
+  const track = useFunnel();
 
   const [address, setAddress] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -60,6 +62,12 @@ export function CheckoutScreen() {
     repos.orders
       .create(order)
       .then(created => {
+        // After the write, so the numerator only counts orders that exist.
+        track('order_placed', boardId, {
+          orderId: created.id,
+          items: created.items.length,
+          total: created.total,
+        });
         // Clear only after the write lands. Clearing first would lose the bag
         // on a failed order and leave nothing to retry with.
         cart.clear();
@@ -71,7 +79,7 @@ export function CheckoutScreen() {
         );
         setPlacing(false);
       });
-  }, [addressError, cart, boardId, recipient.id, repos, navigation]);
+  }, [addressError, cart, boardId, recipient.id, repos, navigation, track]);
 
   return (
     <Screen scroll>

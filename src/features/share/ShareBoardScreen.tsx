@@ -8,6 +8,7 @@ import { generateShareCode } from '../../domain';
 import type { Board } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
 import { Button, Card, Screen, Text, colors, spacing } from '../../ui';
+import { useFunnel } from '../analytics';
 
 type Route = RouteProp<RootStackParamList, 'ShareBoard'>;
 
@@ -17,6 +18,7 @@ const MAX_CODE_ATTEMPTS = 8;
 export function ShareBoardScreen() {
   const { boardId } = useRoute<Route>().params;
   const repos = useRepositories();
+  const track = useFunnel();
 
   const [board, setBoard] = useState<Board | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -95,10 +97,14 @@ export function ShareBoardScreen() {
     }
     // Hands off to the OS sheet — the plan sends boards over the couple's own
     // text messages rather than building any in-app messaging.
+    // Recorded here rather than when the code is generated. Opening this
+    // screen is not sending — counting it would inflate the denominator with
+    // boards that never left her phone.
+    track('board_sent', board.id, { pins: board.pins.length });
     Share.share({ message: invitation(board.title, board.shareCode) }).catch(() => {
       // A dismissed share sheet is not a failure worth reporting.
     });
-  }, [board]);
+  }, [board, track]);
 
   if (error !== null) {
     return (

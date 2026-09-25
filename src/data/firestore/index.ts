@@ -3,6 +3,7 @@
 
 import { LocalCatalogRepository } from '../local/LocalCatalogRepository';
 import type { Repositories } from '../ports';
+import { FirestoreAnalyticsRepository } from './FirestoreAnalyticsRepository';
 import { FirestoreBoardRepository } from './FirestoreBoardRepository';
 import { FirestoreOrderRepository } from './FirestoreOrderRepository';
 import { FirestoreUserRepository } from './FirestoreUserRepository';
@@ -16,6 +17,7 @@ export function createFirestoreRepositories(): Repositories {
     // network round trip to the one screen that most needs to feel instant.
     catalog: new LocalCatalogRepository(),
     orders: new FirestoreOrderRepository(),
+    analytics: new FirestoreAnalyticsRepository(),
   };
 }
 

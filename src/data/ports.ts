@@ -6,7 +6,7 @@
  * Firestore call must not change the shape of a single call site.
  */
 
-import type { Board, CatalogItem, Order, Role, User } from '../domain';
+import type { Board, CatalogItem, FunnelEvent, Order, Role, User } from '../domain';
 
 export interface UserRepository {
   getById(id: string): Promise<User | null>;
@@ -55,10 +55,25 @@ export interface OrderRepository {
   listByRecipient(recipientId: string): Promise<Order[]>;
 }
 
+/**
+ * Funnel events. Write-mostly: the app records, and the numbers get read out
+ * of Firestore afterwards rather than in any screen.
+ */
+export interface AnalyticsRepository {
+  /**
+   * Records an event. Must never reject — a failed write is a lost data point,
+   * and letting it surface would break a flow over a counter.
+   */
+  track(event: FunnelEvent): Promise<void>;
+  /** Used by the reset helper and by reading the funnel back during the test round. */
+  listByBoard(boardId: string): Promise<FunnelEvent[]>;
+}
+
 /** The full set an adapter package must provide. */
 export interface Repositories {
   users: UserRepository;
   boards: BoardRepository;
   catalog: CatalogRepository;
   orders: OrderRepository;
+  analytics: AnalyticsRepository;
 }

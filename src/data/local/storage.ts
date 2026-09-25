@@ -15,6 +15,7 @@ export const KEYS = {
   currentUserId: 'tge:currentUserId',
   boards: 'tge:boards',
   orders: 'tge:orders',
+  events: 'tge:events',
 } as const;
 
 export type StorageKey = (typeof KEYS)[keyof typeof KEYS];

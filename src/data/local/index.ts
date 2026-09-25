@@ -2,6 +2,7 @@
 // the features/ eslint rule blocks screens from importing anything here.
 
 import type { Repositories } from '../ports';
+import { LocalAnalyticsRepository } from './LocalAnalyticsRepository';
 import { LocalBoardRepository } from './LocalBoardRepository';
 import { LocalCatalogRepository } from './LocalCatalogRepository';
 import { LocalOrderRepository } from './LocalOrderRepository';
@@ -13,6 +14,7 @@ export function createLocalRepositories(): Repositories {
     boards: new LocalBoardRepository(),
     catalog: new LocalCatalogRepository(),
     orders: new LocalOrderRepository(),
+    analytics: new LocalAnalyticsRepository(),
   };
 }
 

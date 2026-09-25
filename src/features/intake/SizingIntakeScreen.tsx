@@ -6,6 +6,7 @@ import type { RouteProp } from '@react-navigation/native';
 import type { SizingProfile } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
 import { Button, Chip, Screen, Text, TextField, spacing } from '../../ui';
+import { useFunnel } from '../analytics';
 import { useSession } from '../session';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'SizingIntake'>;
@@ -26,6 +27,7 @@ export function SizingIntakeScreen() {
   const navigation = useNavigation<Nav>();
   const { boardId } = useRoute<Route>().params;
   const { updateUser } = useSession();
+  const track = useFunnel();
 
   const [shirtSize, setShirtSize] = useState<string | null>(null);
   const [waist, setWaist] = useState('');
@@ -61,9 +63,23 @@ export function SizingIntakeScreen() {
     };
 
     updateUser({ sizing })
-      .then(() => navigation.replace('BoardReceived', { boardId }))
+      .then(() => {
+        track('intake_completed', boardId);
+        navigation.replace('BoardReceived', { boardId });
+      })
       .catch(() => setSaving(false));
-  }, [valid, shirtSize, waist, inseam, shoe, fit, updateUser, navigation, boardId]);
+  }, [
+    valid,
+    shirtSize,
+    waist,
+    inseam,
+    shoe,
+    fit,
+    updateUser,
+    navigation,
+    boardId,
+    track,
+  ]);
 
   return (
     <Screen scroll>

@@ -6,6 +6,7 @@ import { useRepositories } from '../../data';
 import { isValidShareCode, normalizeShareCode } from '../../domain';
 import type { RootStackParamList } from '../../navigation';
 import { Button, Screen, Text, TextField, spacing } from '../../ui';
+import { useFunnel } from '../analytics';
 import { useSession } from '../session';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'JoinBoard'>;
@@ -14,6 +15,7 @@ export function JoinBoardScreen() {
   const navigation = useNavigation<Nav>();
   const repos = useRepositories();
   const { enterAs } = useSession();
+  const track = useFunnel();
 
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +51,10 @@ export function JoinBoardScreen() {
         await repos.boards.save({ ...board, recipientId: recipient.id });
       }
 
+      // Only once the code actually resolved and was claimed. Recording the
+      // attempt would count mistyped codes as engagement.
+      track('board_opened', board.id);
+
       // Intake is once per person, not once per board — a second board from
       // the same stylist should not ask for his sizes again.
       navigation.replace(
@@ -58,7 +64,7 @@ export function JoinBoardScreen() {
     })()
       .catch((cause: unknown) => setError(String(cause)))
       .finally(() => setBusy(false));
-  }, [code, repos, enterAs, navigation]);
+  }, [code, repos, enterAs, navigation, track]);
 
   return (
     <Screen scroll>
