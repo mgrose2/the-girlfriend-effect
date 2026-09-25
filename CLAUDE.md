@@ -16,7 +16,10 @@ Plans live in `docs/plans/`:
 - **React Navigation 7** (native-stack)
 - **React Context + hooks** for state. No Redux, no Zustand.
 - **AsyncStorage** now, **Firestore** (`@react-native-firebase`) from Sprint 3
-- **Android only** for this round. iOS is unbuilt and untested.
+- **Android and iOS.** Android is built and verified; iOS is in scope as of
+  Sprint 7 because the test round's recipients are iPhone users, but it has
+  never been compiled — see `docs/ios-testflight.md`. iOS work happens on the
+  MacBook Pro, not the Windows dev machine.
 
 ## Deliberately not building
 

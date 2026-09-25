@@ -15,6 +15,7 @@ Legend: ✅ done · 🟡 partly done (blocker noted) · ⬜ not started
 | 4 — Curated shop, cart, fake checkout | ✅ full recipient run verified, order in Firestore |
 | 5 — Confirmation, polish, instrumentation | ✅ `npm run verify` green, not yet device-verified |
 | 6 — Ship to testers | 🟡 build/docs/seed done; rules deploy and 2-phone QA still needed |
+| 7 — iOS for the test round | 🟡 repo prep committed, never compiled; all remaining steps are Mac-side |
 
 **Open blockers**
 
@@ -366,12 +367,49 @@ Notes carried forward:
 
 ---
 
+## Sprint 7 — iOS for the test round 🟡
+
+Not in the original plan. Added because the pilot's recipients are iPhone
+users, which makes iOS the platform the >50% measurement actually depends on:
+an Android-only build can't be handed to the cohort being measured. The
+"Android only" call it overrides was made on the assumption that no Mac was
+available, and that turned out not to hold.
+
+Android is **not** being dropped — the stylist side can stay on either
+platform, and both share one Firestore project.
+
+| # | Task | Commit | Status |
+|---|---|---|---|
+| 7.1 | Firebase init on iOS (`FirebaseApp.configure()` in `AppDelegate.swift`) — Android gets this from the Gradle plugin, iOS has no equivalent | `chore(ios): configure firebase and photo permissions` | 🟡 written, never compiled |
+| 7.2 | `Info.plist` — photo library usage string, export-compliance flag | same commit | 🟡 written, never compiled |
+| 7.3 | Mac-side setup guide: Apple Developer enrolment, bundle id, `pod install`, archive, TestFlight | `docs: add ios testflight guide` | ✅ `docs/ios-testflight.md` |
+| 7.4 | Bundle identifier off the RN template placeholder | — | ⬜ Xcode-side, needs a decision that can't be undone later |
+| 7.5 | First successful iOS compile + simulator pass | — | ⬜ Mac-side |
+| 7.6 | TestFlight build distributed to a real iPhone tester | — | ⬜ Mac-side; gated on Apple Developer enrolment |
+
+**Done when:** an iPhone tester installs from TestFlight, opens a board sent
+from another device, and the funnel records their run.
+
+Notes carried forward:
+
+- **Every native edit here was written on Windows and has never been
+  compiled.** They're small and conventional, but "it typechecks" means
+  nothing for Swift and plist changes — treat 7.1/7.2 as unverified until a
+  Mac build proves otherwise.
+- **The riskiest untested path is the photo picker → Storage upload chain.**
+  `pickImage.ts` assumes a local `file://` URI and Sprint 3.6's upload was
+  verified on Android only. If iOS pins upload blank, that's the first place
+  to look, and it fails silently rather than loudly — the same way the
+  Android image bug in Sprint 2 did.
+
+---
+
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
 | Native Firebase config eats a day | Sprint 3 is early with slack; JS SDK fallback documented in 3.6 |
-| iOS untested — no Mac in the loop | Target Android for the test round; iOS is out of scope this week |
+| iOS untested | *Superseded.* The premise was that no Mac was available; there is one. Since the testers are iPhone users, iOS became the platform the measurement depends on — see Sprint 7 |
 | Image upload is slower than expected | Compress on pick; cap pins per board at ~12 |
 | Scope creep into subscription/affiliate features | Plan §7 defers both. Neither is in any sprint. Don't add them. |
 
