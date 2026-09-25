@@ -12,16 +12,21 @@ Legend: ✅ done · 🟡 partly done (blocker noted) · ⬜ not started
 | 1 — Domain + data layer + catalog | ✅ 34 tests green, round-trip verified on emulator |
 | 2 — Stylist flow: boards & pins | ✅ full stylist flow driven on emulator |
 | 3 — Firestore swap + sharing + intake | ✅ Firestore and Storage both live and verified |
-| 4 — Curated shop, cart, fake checkout | ⬜ |
+| 4 — Curated shop, cart, fake checkout | ✅ full recipient run verified, order in Firestore |
 | 5 — Confirmation, polish, instrumentation | ⬜ |
 | 6 — Ship to testers | ⬜ |
 
 **Open blockers**
 
-1. **Catalog imagery does not load.** The `placehold.co` URLs used by the seed
-   catalog and demo pins render as "Image unavailable" on device, while other
-   remote images load fine. Sprint 4's shop grid is 48 of these. Needs real
-   product photography, or at minimum a host that actually resolves.
+1. **Catalog imagery is still placeholders.** They now render — the cause was
+   placehold.co serving SVG without a `.png` extension — but they are grey-ish
+   boxes with the product name, not photographs. Real imagery is still needed
+   before the test round, since the question being measured is whether someone
+   wants to buy what they see.
+2. **Two phones have never been tested.** Every flow so far has been driven on
+   one emulator with both roles. The data is genuinely shared via Firestore,
+   so it should work, but the un-fakeable piece of the product remains
+   unproven on real hardware.
 2. **Catalog imagery is placeholders.** Named grey boxes, not product photos.
    Fine for building against; has to be replaced before the test round, since
    a shop grid of grey boxes cannot tell us whether recipients buy. Due with
@@ -251,18 +256,39 @@ Notes carried forward:
 
 ---
 
-## Sprint 4 — Curated shop, cart, fake checkout (Day 4–5) ⬜
+## Sprint 4 — Curated shop, cart, fake checkout (Day 4–5) ✅
 
-| # | Task | Commit |
-|---|---|---|
-| 4.1 | Curated shop grid — `matchCatalog` applied, retailer badge, price, empty state | `feat(shop): add curated shop grid` |
-| 4.2 | Item detail sheet — larger image, size confirm, "Add to bag" | `feat(shop): add item detail sheet` |
-| 4.3 | Cart context + persistent bag across screens | `feat(cart): add cart state` |
-| 4.4 | Cart screen — line items, remove, running total | `feat(cart): add cart screen` |
-| 4.5 | Fake checkout — mock shipping/payment UI that writes an `Order` and clears the bag. **No processor, no card validation.** | `feat(checkout): add fake checkout flow` |
-| 4.6 | Category filter chips + "why this was picked" tag chips on each card — reinforces the curation story testers are here to feel | `feat(shop): add filters and curation context` |
+Branch `sprint/4-shop`, stacked on `sprint/3-sharing`.
+
+| # | Task | Commit | Status |
+|---|---|---|---|
+| — | *Fix:* catalog images were SVG and rendered blank | `fix(catalog): request png placeholders so images actually render` | ✅ |
+| 4.1 | Curated shop grid — `matchCatalog` applied, retailer badge, price, empty state | `feat(shop): add curated shop grid` | ✅ |
+| 4.3 | Cart context + persistent bag across screens | `feat(cart): add cart state` | ✅ built before 4.2 — Add to bag needs it |
+| 4.2 | Item detail sheet — larger image, size confirm, "Add to bag" | `feat(shop): add item detail sheet` | ✅ size shown, not chosen |
+| 4.4 | Cart screen — line items, remove, running total | `feat(cart): add cart screen` | ✅ |
+| 4.5 | Fake checkout — mock shipping/payment UI that writes an `Order` and clears the bag. **No processor, no card validation.** | `feat(checkout): add fake checkout flow` | ✅ includes a thin Confirmation so checkout has a destination |
+| 4.6 | Category filter chips + "why this was picked" tag chips on each card — reinforces the curation story testers are here to feel | `feat(shop): add filters and curation context` | ✅ |
 
 **Done when:** a recipient can go code → intake → shop → bag → order in one sitting.
+→ Done, driven end to end on the emulator: code `TGE-7NNC` → board → 22
+matched pieces → two items added → bag showing per-category sizes (M and
+32x32) and $99.80 → checkout → order placed. The order was then confirmed
+**server-side in Firestore** with the right items and total, not just taken on
+the app's word.
+
+Notes carried forward:
+
+- **4.3 was built before 4.2.** Add to bag has nothing to call otherwise.
+- **Size is derived, never stored.** `requiredSize` recomputes it from the
+  category and the recipient's profile, so `Order.items` stays `CatalogItem[]`
+  exactly as plan §4 defines it and no stored copy can disagree with what
+  matched.
+- **The bag is in memory and scoped to a board.** It does not survive a
+  restart, which suits a flow measured in one sitting, and opening a different
+  board starts fresh so one person's curation cannot end up in another's order.
+- The Confirmation screen is deliberately thin — 5.1 gives it the real summary
+  and 5.2 the donate-bag card.
 
 ---
 
