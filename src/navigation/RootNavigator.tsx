@@ -13,7 +13,7 @@ import {
   JoinBoardScreen,
   ShareBoardScreen,
 } from '../features/share';
-import { CuratedShopScreen } from '../features/shop';
+import { CuratedShopScreen, ItemDetailScreen } from '../features/shop';
 import { colors } from '../ui';
 import type { RootStackParamList } from './types';
 
@@ -82,6 +82,11 @@ export function RootNavigator() {
           component={CuratedShopScreen}
           // Replaced with the board's own name once it loads.
           options={{ title: 'Your picks' }}
+        />
+        <Stack.Screen
+          name="ItemDetail"
+          component={ItemDetailScreen}
+          options={{ title: '', presentation: 'modal' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
